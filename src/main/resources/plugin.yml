@@ -1,3 +1,4 @@
-name: Cartography Table
+name: CartographyTable
 version: 1.0
 main: com.jonathanpotts.cartographytable.CartographyTable
+api-version: 1.13
