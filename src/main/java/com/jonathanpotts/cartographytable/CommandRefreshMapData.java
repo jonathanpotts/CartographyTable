@@ -1,13 +1,17 @@
 package com.jonathanpotts.cartographytable;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -28,50 +32,25 @@ public class CommandRefreshMapData implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         for (World world : Bukkit.getWorlds()) {
-            int radius = (int)Math.ceil(world.getWorldBorder().getSize() / 2) / CHUNK_SIZE;
-            int centerX = world.getWorldBorder().getCenter().getBlockX() / CHUNK_SIZE;
-            int centerZ = world.getWorldBorder().getCenter().getBlockZ() / CHUNK_SIZE;
+            List<int[]> chunkLocs = new ArrayList<int[]>();
 
-            int minX = centerX - radius;
-            int maxX = centerX + radius;
-            int minZ = centerZ - radius;
-            int maxZ = centerZ + radius;
+            // TODO: Check to see if files exist to prevent exception
+            for (File file : new File(world.getWorldFolder(), "region").listFiles()) {
+                String[] split = file.getName().split("\\.");
 
-            Gson gson = new Gson();
-
-            for (int cx = minX; cx <= maxX; cx++) {
-                for (int cz = minZ; cz <= maxZ; cz++) {
-                    if (!world.isChunkGenerated(cx, cz)) {
-                        continue;
-                    }
-
-                    ChunkSnapshot chunk = world.getChunkAt(cx, cz).getChunkSnapshot();
-
-                    int chunkX = cx;
-                    int chunkZ = cz;
-
-                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                        Map<String, String> data = new HashMap<String, String>();
-
-                        for (int x = 0; x < CHUNK_SIZE; x++) {
-                            for (int y = MIN_Y; y < world.getMaxHeight(); y++) {
-                                for (int z = 0; z < CHUNK_SIZE; z++) {
-                                    data.put(x + "." + y + "." + z, chunk.getBlockData(x, y, z).getAsString());
-                                }
-                            }
-                        }
-    
-                        try {
-                            FileWriter fileWriter = new FileWriter(chunkX + "." + chunkZ + ".json");
-                            fileWriter.write(gson.toJson(data));
-                            fileWriter.close();
-                        }
-                        catch (IOException e) {
-                        }
-                    });
-
-                    return true;
+                if (!split[0].equals("r") || split.length != 4 || !split[3].equals("mca")) {
+                    continue;
                 }
+
+                int chunkX = Integer.parseInt(split[1]);
+                int chunkZ = Integer.parseInt(split[2]);
+
+                chunkLocs.add(new int[] { chunkX, chunkZ });
+            }
+
+            for (int[] chunkLoc : chunkLocs) {
+                world.getChunkAt(chunkLoc[0], chunkLoc[1]).getChunkSnapshot();
+                Bukkit.getLogger().info("Got chunk at " + chunkLoc[0] + ", " + chunkLoc[1]);
             }
         }
 
