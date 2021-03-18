@@ -1,4 +1,13 @@
 name: CartographyTable
 version: 1.0
 main: com.jonathanpotts.cartographytable.CartographyTable
-api-version: 1.13
+api-version: 1.16
+commands:
+  refresh-map-data:
+    description: Refreshes data used by the map
+    usage: /<command>
+    permission: cartographytable.op
+permissions:
+  cartographytable.op:
+    description: Allows running CartographyTable commands
+    default: op
