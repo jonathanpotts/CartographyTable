@@ -1,18 +1,10 @@
 package com.jonathanpotts.cartographytable;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import com.google.gson.Gson;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.ChunkSnapshot;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -20,10 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
 public class CommandRefreshMapData implements CommandExecutor {
-    private static final int CHUNK_SIZE = 16;
-    private static final int MIN_Y = 0;
-
     private Plugin plugin;
+    private boolean isRefreshing = false;
 
     public CommandRefreshMapData(Plugin plugin) {
         this.plugin = plugin;
@@ -31,11 +21,30 @@ public class CommandRefreshMapData implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (isRefreshing) {
+            plugin.getLogger().info("Map data is already being refreshed");
+            return false;
+        }
+
+        plugin.getLogger().info("Starting map data refresh");
+        isRefreshing = true;
+
         for (World world : Bukkit.getWorlds()) {
+            File folder = world.getWorldFolder();
+
+            if (!folder.exists()) {
+                continue;
+            }
+
+            folder = new File(folder, "region");
+
+            if (!folder.exists()) {
+                continue;
+            }
+
             List<int[]> chunkLocs = new ArrayList<int[]>();
 
-            // TODO: Check to see if files exist to prevent exception
-            for (File file : new File(world.getWorldFolder(), "region").listFiles()) {
+            for (File file : folder.listFiles()) {
                 String[] split = file.getName().split("\\.");
 
                 if (!split[0].equals("r") || split.length != 4 || !split[3].equals("mca")) {
@@ -50,10 +59,12 @@ public class CommandRefreshMapData implements CommandExecutor {
 
             for (int[] chunkLoc : chunkLocs) {
                 world.getChunkAt(chunkLoc[0], chunkLoc[1]).getChunkSnapshot();
-                Bukkit.getLogger().info("Got chunk at " + chunkLoc[0] + ", " + chunkLoc[1]);
+                plugin.getLogger().info("Got chunk at " + chunkLoc[0] + ", " + chunkLoc[1]);
             }
         }
 
+        plugin.getLogger().info("Map data has been refreshed");
+        isRefreshing = false;
         return true;
     }
 }
