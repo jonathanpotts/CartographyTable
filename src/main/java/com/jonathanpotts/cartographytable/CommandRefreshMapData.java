@@ -18,6 +18,7 @@ import com.jonathanpotts.cartographytable.models.VectorXZ;
 
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -40,6 +41,8 @@ public class CommandRefreshMapData implements CommandExecutor {
 
         plugin.getLogger().info("Starting map data refresh");
         isRefreshing = true;
+
+        Gson gson = new Gson();
 
         for (World world : plugin.getServer().getWorlds()) {
             Path folder = world.getWorldFolder().toPath();
@@ -91,9 +94,9 @@ public class CommandRefreshMapData implements CommandExecutor {
                 for (int y = 0; y < 256; y++) {
                     for (int x = 0; x < 16; x++) {
                         for (int z = 0; z < 16; z++) {
-                            String data = snapshot.getBlockData(x, y, z).getAsString();
+                            BlockData data = snapshot.getBlockData(x, y, z);
 
-                            if (data.equals("minecraft:air")) {
+                            if (data.getMaterial().isAir()) {
                                 continue;
                             }
 
@@ -112,7 +115,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                             }
 
                             Block block = new Block();
-                            block.data = data;
+                            block.data = data.getAsString(true);
                             block.emittedLight = snapshot.getBlockEmittedLight(x, y, z);
                             block.skyLight = snapshot.getBlockSkyLight(x, y, z);
 
@@ -121,7 +124,6 @@ public class CommandRefreshMapData implements CommandExecutor {
                     }
                 }
 
-                Gson gson = new Gson();
                 String json = gson.toJson(chunk);
 
                 String filePath = plugin.getDataFolder() + FileSystems.getDefault().getSeparator() 
