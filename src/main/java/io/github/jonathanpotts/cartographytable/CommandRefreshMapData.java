@@ -21,7 +21,6 @@ import com.google.gson.stream.JsonReader;
 
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
