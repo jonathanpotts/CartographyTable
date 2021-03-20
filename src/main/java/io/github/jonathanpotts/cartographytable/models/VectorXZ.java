@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable.models;
+package io.github.jonathanpotts.cartographytable.models;
 
 public class VectorXZ {
     public int x;

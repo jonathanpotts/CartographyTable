@@ -1,6 +1,6 @@
 name: CartographyTable
 version: 1.0
-main: com.jonathanpotts.cartographytable.CartographyTable
+main: io.github.jonathanpotts.cartographytable.CartographyTable
 api-version: 1.14
 commands:
   refresh-map-data:

@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable;
+package io.github.jonathanpotts.cartographytable;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

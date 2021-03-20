@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable.models;
+package io.github.jonathanpotts.cartographytable.models;
 
 import java.util.Map;
 
