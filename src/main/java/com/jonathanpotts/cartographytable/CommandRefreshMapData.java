@@ -200,8 +200,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                     .resolve(world.getName())
                     .resolve(chunkLoc.x + "." + chunkLoc.z + ".json");
 
-                try
-                {
+                try {
                     plugin.getLogger().info("Writing chunk file to " + path.toString());
 
                     if (!Files.exists(path.getParent())) {
@@ -209,9 +208,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                     }
 
                     Files.write(path, json.getBytes());
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     plugin.getLogger().severe("Unable to write chunk file: " + e.toString());
                     return true;
                 }
