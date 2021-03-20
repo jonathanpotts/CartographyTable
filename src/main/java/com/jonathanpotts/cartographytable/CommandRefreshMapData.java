@@ -154,38 +154,20 @@ public class CommandRefreshMapData implements CommandExecutor {
                                 }
                             }
 
-                            if (isAir) {
-                                if (emittedLight != MAX_LIGHT_LEVEL) {
-                                    if (blockModel.light == null) {
-                                        blockModel.light = new HashMap<>();
-                                    }
-
-                                    blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
+                            if (emittedLight != (isAir ? MAX_LIGHT_LEVEL : MIN_LIGHT_LEVEL)) {
+                                if (blockModel.light == null) {
+                                    blockModel.light = new HashMap<>();
                                 }
 
-                                if (skyLight != MAX_LIGHT_LEVEL) {
-                                    if (blockModel.light == null) {
-                                        blockModel.light = new HashMap<>();
-                                    }
+                                blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
+                            }
 
-                                    blockModel.light.put(LightType.SKY.ordinal(), skyLight);
-                                }
-                            } else {
-                                if (emittedLight != MIN_LIGHT_LEVEL) {
-                                    if (blockModel.light == null) {
-                                        blockModel.light = new HashMap<>();
-                                    }
-
-                                    blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
+                            if (skyLight != (isAir ? MAX_LIGHT_LEVEL : MIN_LIGHT_LEVEL)) {
+                                if (blockModel.light == null) {
+                                    blockModel.light = new HashMap<>();
                                 }
 
-                                if (skyLight != MIN_LIGHT_LEVEL) {
-                                    if (blockModel.light == null) {
-                                        blockModel.light = new HashMap<>();
-                                    }
-
-                                    blockModel.light.put(LightType.SKY.ordinal(), skyLight);
-                                }
+                                blockModel.light.put(LightType.SKY.ordinal(), skyLight);
                             }
 
                             xMap.put(z, blockModel);
