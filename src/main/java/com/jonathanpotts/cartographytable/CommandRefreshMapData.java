@@ -144,7 +144,18 @@ public class CommandRefreshMapData implements CommandExecutor {
                             byte skyLight = (byte)chunk.getBlockSkyLight(x, y, z);
 
                             BlockModel blockModel = new BlockModel();
-                            blockModel.data = block.getAsString(true);
+                            blockModel.material = block.getMaterial().ordinal();
+
+                            String blockData = block.getAsString(true);
+                            int dataStartIndex = blockData.indexOf("[");
+
+                            if (dataStartIndex > 0) {
+                                int dataEndIndex = blockData.indexOf("]", dataStartIndex);
+
+                                if (dataEndIndex > dataStartIndex) {
+                                    blockModel.data = blockData.substring(dataStartIndex + 1, dataEndIndex);
+                                }
+                            }
 
                             if (isAir) {
                                 if (emittedLight != MAX_LIGHT_LEVEL) {
@@ -152,7 +163,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                                         blockModel.light = new HashMap<>();
                                     }
 
-                                    blockModel.light.put(LightType.EMITTED, emittedLight);
+                                    blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
                                 }
 
                                 if (skyLight != MAX_LIGHT_LEVEL) {
@@ -160,7 +171,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                                         blockModel.light = new HashMap<>();
                                     }
 
-                                    blockModel.light.put(LightType.SKY, skyLight);
+                                    blockModel.light.put(LightType.SKY.ordinal(), skyLight);
                                 }
                             } else {
                                 if (emittedLight != MIN_LIGHT_LEVEL) {
@@ -168,7 +179,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                                         blockModel.light = new HashMap<>();
                                     }
 
-                                    blockModel.light.put(LightType.EMITTED, emittedLight);
+                                    blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
                                 }
 
                                 if (skyLight != MIN_LIGHT_LEVEL) {
@@ -176,7 +187,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                                         blockModel.light = new HashMap<>();
                                     }
 
-                                    blockModel.light.put(LightType.SKY, skyLight);
+                                    blockModel.light.put(LightType.SKY.ordinal(), skyLight);
                                 }
                             }
 
