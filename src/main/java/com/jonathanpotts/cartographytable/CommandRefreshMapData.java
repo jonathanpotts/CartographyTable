@@ -1,10 +1,8 @@
 package com.jonathanpotts.cartographytable;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -197,16 +195,14 @@ public class CommandRefreshMapData implements CommandExecutor {
 
                 String json = gson.toJson(chunkModel);
 
-                String filePath = plugin.getDataFolder() + FileSystems.getDefault().getSeparator() 
-                    + "chunks" + FileSystems.getDefault().getSeparator() 
-                    + world.getName() + FileSystems.getDefault().getSeparator()
-                    + chunkLoc.x + "." + chunkLoc.z + ".json";
-
-                Path path = Paths.get(filePath);
+                Path path = plugin.getDataFolder().toPath()
+                    .resolve("chunks")
+                    .resolve(world.getName())
+                    .resolve(chunkLoc.x + "." + chunkLoc.z + ".json");
 
                 try
                 {
-                    plugin.getLogger().info("Writing chunk file to " + filePath);
+                    plugin.getLogger().info("Writing chunk file to " + path.toString());
 
                     if (!Files.exists(path.getParent())) {
                         Files.createDirectories(path.getParent());
