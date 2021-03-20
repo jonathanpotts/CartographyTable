@@ -21,6 +21,7 @@ import com.google.gson.stream.JsonReader;
 
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
@@ -30,7 +31,10 @@ import org.bukkit.plugin.Plugin;
 
 import io.github.jonathanpotts.cartographytable.models.BlockModel;
 import io.github.jonathanpotts.cartographytable.models.ChunkModel;
+import io.github.jonathanpotts.cartographytable.models.ServerModel;
+import io.github.jonathanpotts.cartographytable.models.VectorXYZ;
 import io.github.jonathanpotts.cartographytable.models.VectorXZ;
+import io.github.jonathanpotts.cartographytable.models.WorldModel;
 
 public class CommandRefreshMapData implements CommandExecutor {
     private static final short MIN_Y = 0;
@@ -70,6 +74,10 @@ public class CommandRefreshMapData implements CommandExecutor {
             return true;
         }
 
+        ServerModel serverModel = new ServerModel();
+        serverModel.motd = plugin.getServer().getMotd();
+        serverModel.worlds = new ArrayList<>();
+
         for (World world : plugin.getServer().getWorlds()) {
             try {
                 processWorld(world);
@@ -77,6 +85,30 @@ public class CommandRefreshMapData implements CommandExecutor {
             catch (IOException e) {
                 plugin.getLogger().severe("Unable to process world (" + world.getName() + "): " + e.toString());
             }
+
+            WorldModel worldModel = new WorldModel();
+            worldModel.name = world.getName();
+            worldModel.spawn = new VectorXYZ(world.getSpawnLocation().getBlockX(), world.getSpawnLocation().getBlockY(), world.getSpawnLocation().getBlockZ());
+
+            serverModel.worlds.add(worldModel);
+        }
+
+        String json = gson.toJson(serverModel);
+
+        Path path = plugin.getDataFolder().toPath()
+        .resolve("wwwroot")
+        .resolve("data")
+        .resolve("server.json");
+
+        try {
+            if (!Files.exists(path.getParent())) {
+                Files.createDirectories(path.getParent());
+            }
+
+            Files.write(path, json.getBytes());
+        } catch (IOException e) {
+            plugin.getLogger().severe("Unable to save world list: " + e.toString());
+            return true;
         }
 
         plugin.getLogger().info("Map data has been refreshed");
@@ -99,8 +131,8 @@ public class CommandRefreshMapData implements CommandExecutor {
 
         Path path = plugin.getDataFolder().toPath()
         .resolve("wwwroot")
-        .resolve("materials")
-        .resolve("map.json");
+        .resolve("data")
+        .resolve("materials.json");
 
         if (!Files.exists(path.getParent())) {
             Files.createDirectories(path.getParent());
@@ -191,7 +223,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
             Path path = plugin.getDataFolder().toPath()
                 .resolve("wwwroot")
-                .resolve("chunks")
+                .resolve("data")
                 .resolve(world.getName())
                 .resolve(chunkLoc.x + "." + chunkLoc.z + ".json");
     
