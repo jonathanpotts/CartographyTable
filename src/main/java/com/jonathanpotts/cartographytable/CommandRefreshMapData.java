@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.jonathanpotts.LightType;
 import com.jonathanpotts.cartographytable.models.BlockModel;
 import com.jonathanpotts.cartographytable.models.ChunkModel;
 import com.jonathanpotts.cartographytable.models.VectorXZ;
@@ -26,6 +27,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
 public class CommandRefreshMapData implements CommandExecutor {
+    private static final short MIN_Y = 0;
+    private static final short MAX_Y = 255;
+    private static final byte MIN_X = 0;
+    private static final byte MAX_X = 15;
+    private static final byte MIN_Z = 0;
+    private static final byte MAX_Z = 15;
+    private static final byte MIN_LIGHT_LEVEL = 0;
+    private static final byte MAX_LIGHT_LEVEL = 15;
+
     private Plugin plugin;
     private boolean isRefreshing = false;
 
@@ -44,7 +54,6 @@ public class CommandRefreshMapData implements CommandExecutor {
         isRefreshing = true;
 
         Gson gson = new GsonBuilder()
-            .registerTypeAdapter(BlockModel.class, new ExcludeDefaultValuesJsonSerializer<>())
             .disableHtmlEscaping()
             .create();
 
@@ -90,45 +99,93 @@ public class CommandRefreshMapData implements CommandExecutor {
             }
 
             for (VectorXZ chunkLoc : chunkLocs) {
-                ChunkSnapshot snapshot = world.getChunkAt(chunkLoc.x, chunkLoc.z).getChunkSnapshot();
+                ChunkSnapshot chunk = world.getChunkAt(chunkLoc.x, chunkLoc.z).getChunkSnapshot();
 
-                ChunkModel chunk = new ChunkModel();
-                chunk.blocks = new HashMap<>();
+                ChunkModel chunkModel = new ChunkModel();
+                chunkModel.blocks = new HashMap<>();
 
-                for (int y = 0; y < 256; y++) {
-                    for (int x = 0; x < 16; x++) {
-                        for (int z = 0; z < 16; z++) {
-                            BlockData data = snapshot.getBlockData(x, y, z);
+                for (short y = MIN_Y; y <= MAX_Y; y++) {
+                    for (byte x = MIN_X; x <= MAX_X; x++) {
+                        for (byte z = MIN_Z; z <= MAX_Z; z++) {
+                            BlockData block = chunk.getBlockData(x, y, z);
 
-                            if (data.getMaterial().isAir()) {
-                                continue;
+                            boolean isAir = block.getMaterial().isAir();
+
+                            if (isAir) {
+                                boolean surroundedByAir = 
+                                    (y > MIN_Y ? chunk.getBlockData(x, y - 1, z).getMaterial().isAir() : true)
+                                    && (y < MAX_Y ? chunk.getBlockData(x, y + 1, z).getMaterial().isAir() : true)
+                                    // Keep edge blocks on X and Z axes in case of needing light information in a different chunk.
+                                    && (x > MIN_X ? chunk.getBlockData(x - 1, y, z).getMaterial().isAir() : false)
+                                    && (x < MAX_X ? chunk.getBlockData(x + 1, y, z).getMaterial().isAir() : false)
+                                    && (z > MIN_Z ? chunk.getBlockData(x, y, z - 1).getMaterial().isAir() : false)
+                                    && (z < MAX_Z ? chunk.getBlockData(x, y, z + 1).getMaterial().isAir() : false);
+
+                                if (surroundedByAir) {
+                                    continue;
+                                }
                             }
 
-                            Map<Integer, Map<Integer, BlockModel>> yMap = chunk.blocks.get(y);
+                            Map<Byte, Map<Byte, BlockModel>> yMap = chunkModel.blocks.get(y);
 
                             if (yMap == null) {
                                 yMap = new HashMap<>();
-                                chunk.blocks.put(y, yMap);
+                                chunkModel.blocks.put(y, yMap);
                             }
 
-                            Map<Integer, BlockModel> xMap = yMap.get(x);
+                            Map<Byte, BlockModel> xMap = yMap.get(x);
 
                             if (xMap == null) {
                                 xMap = new HashMap<>();
                                 yMap.put(x, xMap);
                             }
 
-                            BlockModel block = new BlockModel();
-                            block.data = data.getAsString(true);
-                            block.emittedLight = snapshot.getBlockEmittedLight(x, y, z);
-                            block.skyLight = snapshot.getBlockSkyLight(x, y, z);
+                            byte emittedLight = (byte)chunk.getBlockEmittedLight(x, y, z);
+                            byte skyLight = (byte)chunk.getBlockSkyLight(x, y, z);
 
-                            xMap.put(z, block);
+                            BlockModel blockModel = new BlockModel();
+                            blockModel.data = block.getAsString(true);
+
+                            if (isAir) {
+                                if (emittedLight != MAX_LIGHT_LEVEL) {
+                                    if (blockModel.light == null) {
+                                        blockModel.light = new HashMap<>();
+                                    }
+
+                                    blockModel.light.put(LightType.EMITTED, emittedLight);
+                                }
+
+                                if (skyLight != MAX_LIGHT_LEVEL) {
+                                    if (blockModel.light == null) {
+                                        blockModel.light = new HashMap<>();
+                                    }
+
+                                    blockModel.light.put(LightType.SKY, skyLight);
+                                }
+                            } else {
+                                if (emittedLight != MIN_LIGHT_LEVEL) {
+                                    if (blockModel.light == null) {
+                                        blockModel.light = new HashMap<>();
+                                    }
+
+                                    blockModel.light.put(LightType.EMITTED, emittedLight);
+                                }
+
+                                if (skyLight != MIN_LIGHT_LEVEL) {
+                                    if (blockModel.light == null) {
+                                        blockModel.light = new HashMap<>();
+                                    }
+
+                                    blockModel.light.put(LightType.SKY, skyLight);
+                                }
+                            }
+
+                            xMap.put(z, blockModel);
                         }
                     }
                 }
 
-                String json = gson.toJson(chunk);
+                String json = gson.toJson(chunkModel);
 
                 String filePath = plugin.getDataFolder() + FileSystems.getDefault().getSeparator() 
                     + "chunks" + FileSystems.getDefault().getSeparator() 
