@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.jonathanpotts.cartographytable.models.Block;
-import com.jonathanpotts.cartographytable.models.Chunk;
+import com.jonathanpotts.cartographytable.models.BlockModel;
+import com.jonathanpotts.cartographytable.models.ChunkModel;
 import com.jonathanpotts.cartographytable.models.VectorXZ;
 
 import org.bukkit.ChunkSnapshot;
@@ -43,9 +43,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         plugin.getLogger().info("Starting map data refresh");
         isRefreshing = true;
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(Block.class, new ExcludeDefaultValuesJsonSerializer<>());
-        Gson gson = gsonBuilder.create();
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(BlockModel.class, new ExcludeDefaultValuesJsonSerializer<>())
+            .disableHtmlEscaping()
+            .create();
 
         for (World world : plugin.getServer().getWorlds()) {
             Path folder = world.getWorldFolder().toPath();
@@ -91,7 +92,7 @@ public class CommandRefreshMapData implements CommandExecutor {
             for (VectorXZ chunkLoc : chunkLocs) {
                 ChunkSnapshot snapshot = world.getChunkAt(chunkLoc.x, chunkLoc.z).getChunkSnapshot();
 
-                Chunk chunk = new Chunk();
+                ChunkModel chunk = new ChunkModel();
                 chunk.blocks = new HashMap<>();
 
                 for (int y = 0; y < 256; y++) {
@@ -103,21 +104,21 @@ public class CommandRefreshMapData implements CommandExecutor {
                                 continue;
                             }
 
-                            Map<Integer, Map<Integer, Block>> yMap = chunk.blocks.get(y);
+                            Map<Integer, Map<Integer, BlockModel>> yMap = chunk.blocks.get(y);
 
                             if (yMap == null) {
                                 yMap = new HashMap<>();
                                 chunk.blocks.put(y, yMap);
                             }
 
-                            Map<Integer, Block> xMap = yMap.get(x);
+                            Map<Integer, BlockModel> xMap = yMap.get(x);
 
                             if (xMap == null) {
                                 xMap = new HashMap<>();
                                 yMap.put(x, xMap);
                             }
 
-                            Block block = new Block();
+                            BlockModel block = new BlockModel();
                             block.data = data.getAsString(true);
                             block.emittedLight = snapshot.getBlockEmittedLight(x, y, z);
                             block.skyLight = snapshot.getBlockSkyLight(x, y, z);
