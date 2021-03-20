@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.jonathanpotts.cartographytable.models.Block;
 import com.jonathanpotts.cartographytable.models.Chunk;
 import com.jonathanpotts.cartographytable.models.VectorXZ;
@@ -42,7 +43,9 @@ public class CommandRefreshMapData implements CommandExecutor {
         plugin.getLogger().info("Starting map data refresh");
         isRefreshing = true;
 
-        Gson gson = new Gson();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(Block.class, new ExcludeDefaultValuesJsonSerializer<>());
+        Gson gson = gsonBuilder.create();
 
         for (World world : plugin.getServer().getWorlds()) {
             Path folder = world.getWorldFolder().toPath();
