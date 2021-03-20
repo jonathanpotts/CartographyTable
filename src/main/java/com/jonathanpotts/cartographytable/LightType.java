@@ -1,4 +1,4 @@
-package com.jonathanpotts;
+package com.jonathanpotts.cartographytable;
 
 public enum LightType {
     SKY,

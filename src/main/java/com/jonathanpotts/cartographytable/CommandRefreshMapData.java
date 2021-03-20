@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.jonathanpotts.LightType;
 import com.jonathanpotts.cartographytable.models.BlockModel;
 import com.jonathanpotts.cartographytable.models.ChunkModel;
 import com.jonathanpotts.cartographytable.models.VectorXZ;
@@ -144,7 +143,7 @@ public class CommandRefreshMapData implements CommandExecutor {
                             byte skyLight = (byte)chunk.getBlockSkyLight(x, y, z);
 
                             BlockModel blockModel = new BlockModel();
-                            blockModel.material = block.getMaterial().ordinal();
+                            blockModel.mat = block.getMaterial().ordinal();
 
                             String blockData = block.getAsString(true);
                             int dataStartIndex = blockData.indexOf("[");
