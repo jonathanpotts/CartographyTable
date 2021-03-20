@@ -1,6 +1,8 @@
 package io.github.jonathanpotts.cartographytable;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,6 +13,11 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
@@ -27,13 +34,13 @@ import io.github.jonathanpotts.cartographytable.models.VectorXZ;
 
 public class CommandRefreshMapData implements CommandExecutor {
     private static final short MIN_Y = 0;
-    private static final short MAX_Y = 255;
     private static final byte MIN_X = 0;
     private static final byte MAX_X = 15;
     private static final byte MIN_Z = 0;
     private static final byte MAX_Z = 15;
     private static final byte MIN_LIGHT_LEVEL = 0;
     private static final byte MAX_LIGHT_LEVEL = 15;
+    private static final String VERSION_MANIFEST = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
     private Plugin plugin;
     private boolean isRefreshing = false;
@@ -91,6 +98,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         String json = gson.toJson(materialMap);
 
         Path path = plugin.getDataFolder().toPath()
+        .resolve("wwwroot")
         .resolve("materials")
         .resolve("map.json");
 
@@ -99,6 +107,45 @@ public class CommandRefreshMapData implements CommandExecutor {
         }
 
         Files.write(path, json.getBytes());
+
+        downloadMaterialTextures();
+    }
+
+    private void downloadMaterialTextures() throws JsonParseException {
+        JsonObject jObject;
+
+        try {
+            jObject = (JsonObject)new JsonParser().parse(new JsonReader(new InputStreamReader(new URL(VERSION_MANIFEST).openStream())));
+        } catch (Exception e) {
+            throw new JsonParseException("Unable to parse Minecraft version manifest", e);
+        }
+
+        String releaseManifest = null;
+
+        String latest = jObject.get("latest").getAsJsonObject().get("release").getAsString();
+        for (JsonElement version : jObject.get("versions").getAsJsonArray()) {
+            JsonObject versionObject = (JsonObject)version;
+            if (!versionObject.get("id").getAsString().equals(latest)) {
+                continue;
+            }
+
+            releaseManifest = versionObject.get("url").getAsString();
+            break;
+        }
+
+        if (releaseManifest == null) {
+            throw new JsonParseException("Unable to find latest release in Minecraft version manifest");
+        }
+
+        try {
+            jObject = (JsonObject)new JsonParser().parse(new JsonReader(new InputStreamReader(new URL(releaseManifest).openStream())));
+        } catch (Exception e) {
+            throw new JsonParseException("Unable to parse latest release manifest", e);
+        }
+
+        String client = jObject.get("downloads").getAsJsonObject().get("client").getAsJsonObject().get("url").getAsString();
+
+        // TODO: Download client and extract block textures
     }
 
     private void processWorld(World world) throws IOException {
@@ -143,6 +190,7 @@ public class CommandRefreshMapData implements CommandExecutor {
             String json = gson.toJson(chunkModel);
 
             Path path = plugin.getDataFolder().toPath()
+                .resolve("wwwroot")
                 .resolve("chunks")
                 .resolve(world.getName())
                 .resolve(chunkLoc.x + "." + chunkLoc.z + ".json");
@@ -164,10 +212,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         ChunkModel chunkModel = new ChunkModel();
         chunkModel.blocks = new HashMap<>();
 
-        for (short blockY = MIN_Y; blockY <= MAX_Y; blockY++) {
+        for (short blockY = MIN_Y; blockY < (short)world.getMaxHeight(); blockY++) {
             for (byte blockX = MIN_X; blockX <= MAX_X; blockX++) {
                 for (byte blockZ = MIN_Z; blockZ <= MAX_Z; blockZ++) {
-                    BlockModel blockModel = processBlock(chunk, blockX, blockY, blockZ);
+                    BlockModel blockModel = processBlock((short)world.getMaxHeight(), chunk, blockX, blockY, blockZ);
 
                     if (blockModel == null) {
                         continue;
@@ -189,13 +237,13 @@ public class CommandRefreshMapData implements CommandExecutor {
         return chunkModel;
     }
 
-    private BlockModel processBlock(ChunkSnapshot chunk, byte x, short y, byte z) {
+    private BlockModel processBlock(short maxHeight, ChunkSnapshot chunk, byte x, short y, byte z) {
         BlockData block = chunk.getBlockData(x, y, z);
 
         if (block.getMaterial().isAir()) {
             boolean surroundedByAir = 
                 (y > MIN_Y ? chunk.getBlockData(x, y - 1, z).getMaterial().isAir() : true)
-                && (y < MAX_Y ? chunk.getBlockData(x, y + 1, z).getMaterial().isAir() : true)
+                && (y < maxHeight - 1 ? chunk.getBlockData(x, y + 1, z).getMaterial().isAir() : true)
                 // Keep edge blocks on X and Z axes in case of needing light information in a different chunk.
                 && (x > MIN_X ? chunk.getBlockData(x - 1, y, z).getMaterial().isAir() : false)
                 && (x < MAX_X ? chunk.getBlockData(x + 1, y, z).getMaterial().isAir() : false)
