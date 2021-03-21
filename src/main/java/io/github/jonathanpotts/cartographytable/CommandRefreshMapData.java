@@ -67,15 +67,18 @@ public class CommandRefreshMapData implements CommandExecutor {
         isRefreshing = true;
 
         try {
+            generateServerData();
+        } catch (IOException e) {
+            plugin.getLogger().severe("Unable to save server data: " + e.toString());
+            return true;
+        }
+
+        try {
             generateMaterialMap();
         } catch (IOException e) {
             plugin.getLogger().severe("Unable to save material map: " + e.toString());
             return true;
         }
-
-        ServerModel serverModel = new ServerModel();
-        serverModel.motd = plugin.getServer().getMotd();
-        serverModel.worlds = new ArrayList<>();
 
         for (World world : plugin.getServer().getWorlds()) {
             try {
@@ -84,7 +87,19 @@ public class CommandRefreshMapData implements CommandExecutor {
             catch (IOException e) {
                 plugin.getLogger().severe("Unable to process world (" + world.getName() + "): " + e.toString());
             }
+        }
 
+        plugin.getLogger().info("Map data has been refreshed");
+        isRefreshing = false;
+        return true;
+    }
+
+    private void generateServerData() throws IOException {
+        ServerModel serverModel = new ServerModel();
+        serverModel.motd = plugin.getServer().getMotd();
+        serverModel.worlds = new ArrayList<>();
+
+        for (World world : plugin.getServer().getWorlds()) {
             WorldModel worldModel = new WorldModel();
             worldModel.name = world.getName();
             worldModel.spawn = new VectorXYZ(world.getSpawnLocation().getBlockX(), world.getSpawnLocation().getBlockY(), world.getSpawnLocation().getBlockZ());
@@ -106,13 +121,8 @@ public class CommandRefreshMapData implements CommandExecutor {
 
             Files.write(path, json.getBytes());
         } catch (IOException e) {
-            plugin.getLogger().severe("Unable to save world list: " + e.toString());
-            return true;
+            throw new IOException("Unable to save server data", e);
         }
-
-        plugin.getLogger().info("Map data has been refreshed");
-        isRefreshing = false;
-        return true;
     }
 
     private void generateMaterialMap() throws IOException {
