@@ -1,6 +1,6 @@
-package io.github.jonathanpotts.cartographytable;
+package io.github.jonathanpotts.cartographytable
 
-public enum class LightType {
+enum class LightType {
     SKY,
     EMITTED
 }

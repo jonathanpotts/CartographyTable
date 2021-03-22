@@ -1,6 +1,6 @@
-package io.github.jonathanpotts.cartographytable.models;
+package io.github.jonathanpotts.cartographytable.models
 
-public class WorldModel {
-    public var name: String = "";
-    public var spawn: VectorXYZ = VectorXYZ(0, 0, 0);
+class WorldModel {
+  var name: String = ""
+  var spawn: VectorXYZ = VectorXYZ(0, 0, 0)
 }

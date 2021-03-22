@@ -1,5 +1,4 @@
-package io.github.jonathanpotts.cartographytable.models;
+package io.github.jonathanpotts.cartographytable.models
 
-public class VectorXZ(public val x: Int, public val z: Int) {
-
+class VectorXZ(val x: Int, val z: Int) {
 }

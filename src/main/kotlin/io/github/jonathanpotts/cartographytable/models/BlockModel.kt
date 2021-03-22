@@ -1,7 +1,7 @@
-package io.github.jonathanpotts.cartographytable.models;
+package io.github.jonathanpotts.cartographytable.models
 
-public class BlockModel {
-    public var mat: Int = -1;
-    public var data: String? = null;
-    public var light: Map<Int, Byte> = HashMap();
+class BlockModel {
+  var mat: Int = -1
+  var data: String? = null
+  var light: Map<Int, Byte> = HashMap()
 }
