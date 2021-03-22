@@ -5,13 +5,24 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 
-class CommandRefreshMapData(val plugin: JavaPlugin) : CommandExecutor {
+class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
+  private var isRefreshing = false
+
   override fun onCommand(sender: CommandSender,
                          cmd: Command,
                          label: String,
                          args: Array<String>)
   : Boolean {
+    if (isRefreshing) {
+      plugin.logger.info("Map data is already being refreshed")
+      return true
+    }
+
+    isRefreshing = true
+
     // TODO: Convert Java class to Kotlin
+
+    isRefreshing = false
     return true
   }
 }
