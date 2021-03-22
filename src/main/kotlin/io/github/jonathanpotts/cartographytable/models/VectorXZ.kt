@@ -1,4 +1,6 @@
 package io.github.jonathanpotts.cartographytable.models
 
-class VectorXZ(val x: Int, val z: Int) {
-}
+data class VectorXZ(
+  val x: Int = 0,
+  val z: Int = 0
+)
