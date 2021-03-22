@@ -1,10 +1,14 @@
 package io.github.jonathanpotts.cartographytable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,14 +73,18 @@ public class CommandRefreshMapData implements CommandExecutor {
         try {
             generateServerData();
         } catch (IOException e) {
-            plugin.getLogger().severe("Unable to save server data: " + e.toString());
+            plugin.getLogger().severe("Unable to save server data");
+            e.printStackTrace();
+            isRefreshing = false;
             return true;
         }
 
         try {
-            generateMaterialMap();
+            generateMaterialsData();
         } catch (IOException e) {
-            plugin.getLogger().severe("Unable to save material map: " + e.toString());
+            plugin.getLogger().severe("Unable to save materials data");
+            e.printStackTrace();
+            isRefreshing = false;
             return true;
         }
 
@@ -85,7 +93,10 @@ public class CommandRefreshMapData implements CommandExecutor {
                 processWorld(world);
             }
             catch (IOException e) {
-                plugin.getLogger().severe("Unable to process world (" + world.getName() + "): " + e.toString());
+                plugin.getLogger().severe("Unable to process world (" + world.getName() + ")");
+                e.printStackTrace();
+                isRefreshing = false;
+                return true;
             }
         }
 
@@ -125,7 +136,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         }
     }
 
-    private void generateMaterialMap() throws IOException {
+    private void generateMaterialsData() throws IOException {
         Map<Integer, String> materialMap = new HashMap<>();
 
         for (Material material : Material.values()) {
@@ -149,10 +160,15 @@ public class CommandRefreshMapData implements CommandExecutor {
 
         Files.write(path, json.getBytes());
 
-        downloadMaterialTextures();
+        try {
+            downloadMaterialTextures();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        
     }
 
-    private void downloadMaterialTextures() throws JsonParseException {
+    private void downloadMaterialTextures() throws JsonParseException, IOException {
         JsonObject jObject;
 
         try {
@@ -186,7 +202,30 @@ public class CommandRefreshMapData implements CommandExecutor {
 
         String client = jObject.get("downloads").getAsJsonObject().get("client").getAsJsonObject().get("url").getAsString();
 
-        // TODO: Download client and extract block textures
+        Path texturesPath = plugin.getDataFolder().toPath()
+            .resolve("wwwroot")
+            .resolve("data")
+            .resolve("textures")
+            .resolve("block");
+
+        try {
+            Path clientTempFile = Files.createTempFile("CartographyTable", ".zip");
+            InputStream clientStream = new URL(client).openStream();
+            Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
+            clientStream.close();
+
+            FileSystem fs = FileSystems.newFileSystem(clientTempFile, null);
+            Path blockTextures = fs.getPath("assets", "minecraft", "textures", "block");
+
+            for (Path source : Files.walk(blockTextures).collect(Collectors.toList())) {
+                Path destination = texturesPath.resolve(blockTextures.relativize(source));
+                Files.copy(source, destination);
+            }
+
+            Files.delete(clientTempFile);
+        } catch (Exception e) {
+            throw new IOException("Unable to download textures", e);
+        }
     }
 
     private void processWorld(World world) throws IOException {
