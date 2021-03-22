@@ -161,14 +161,14 @@ public class CommandRefreshMapData implements CommandExecutor {
         Files.write(path, json.getBytes());
 
         try {
-            downloadMaterialTextures();
+            downloadMaterials();
         } catch (Exception e) {
             throw new IOException(e);
         }
         
     }
 
-    private void downloadMaterialTextures() throws JsonParseException, IOException {
+    private void downloadMaterials() throws JsonParseException, IOException {
         JsonObject jObject;
 
         try {
@@ -202,30 +202,61 @@ public class CommandRefreshMapData implements CommandExecutor {
 
         String client = jObject.get("downloads").getAsJsonObject().get("client").getAsJsonObject().get("url").getAsString();
 
+        Path clientTempFile;
+        FileSystem fs;
+
+        try {
+            clientTempFile = Files.createTempFile("CartographyTable", ".zip");
+            InputStream clientStream = new URL(client).openStream();
+            Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
+            clientStream.close();
+
+            fs = FileSystems.newFileSystem(clientTempFile, null);
+        } catch (Exception e) {
+            throw new IOException("Unable to download textures", e);
+        }
+
         Path texturesPath = plugin.getDataFolder().toPath()
             .resolve("wwwroot")
             .resolve("data")
             .resolve("textures")
             .resolve("block");
 
-        try {
-            Path clientTempFile = Files.createTempFile("CartographyTable", ".zip");
-            InputStream clientStream = new URL(client).openStream();
-            Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
-            clientStream.close();
-
-            FileSystem fs = FileSystems.newFileSystem(clientTempFile, null);
-            Path blockTextures = fs.getPath("assets", "minecraft", "textures", "block");
-
-            for (Path source : Files.walk(blockTextures).collect(Collectors.toList())) {
-                Path destination = texturesPath.resolve(blockTextures.relativize(source));
-                Files.copy(source, destination);
-            }
-
-            Files.delete(clientTempFile);
-        } catch (Exception e) {
-            throw new IOException("Unable to download textures", e);
+        if (!Files.exists(texturesPath)) {
+            Files.createDirectories(texturesPath);
         }
+
+        Path blockTextures = fs.getPath("assets", "minecraft", "textures", "block");
+
+        for (Path source : Files.walk(blockTextures).collect(Collectors.toList())) {
+            Path destination = texturesPath.resolve(blockTextures.relativize(source).toString());
+            if (Files.exists(destination) && Files.isDirectory(destination)) {
+                continue;
+            }
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        Path modelsPath = plugin.getDataFolder().toPath()
+        .resolve("wwwroot")
+        .resolve("data")
+        .resolve("models")
+        .resolve("block");
+
+        if (!Files.exists(modelsPath)) {
+            Files.createDirectories(modelsPath);
+        }
+
+        Path blockModels = fs.getPath("assets", "minecraft", "models", "block");
+
+        for (Path source : Files.walk(blockModels).collect(Collectors.toList())) {
+            Path destination = modelsPath.resolve(blockModels.relativize(source).toString());
+            if (Files.exists(destination) && Files.isDirectory(destination)) {
+                continue;
+            }
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        Files.delete(clientTempFile);
     }
 
     private void processWorld(World world) throws IOException {
