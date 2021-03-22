@@ -122,9 +122,9 @@ public class CommandRefreshMapData implements CommandExecutor {
         String json = gson.toJson(serverModel);
 
         Path path = plugin.getDataFolder().toPath()
-        .resolve("wwwroot")
-        .resolve("data")
-        .resolve("server.json");
+            .resolve("wwwroot")
+            .resolve("data")
+            .resolve("server.json");
 
         try {
             if (!Files.exists(path.getParent())) {
@@ -137,9 +137,9 @@ public class CommandRefreshMapData implements CommandExecutor {
         }
 
         Path licensePath = plugin.getDataFolder().toPath()
-        .resolve("wwwroot")
-        .resolve("data")
-        .resolve("LICENSE.txt");
+            .resolve("wwwroot")
+            .resolve("data")
+            .resolve("LICENSE.txt");
 
         try {
             Files.write(licensePath, LICENSE.getBytes());
@@ -162,9 +162,9 @@ public class CommandRefreshMapData implements CommandExecutor {
         String json = gson.toJson(materialMap);
 
         Path path = plugin.getDataFolder().toPath()
-        .resolve("wwwroot")
-        .resolve("data")
-        .resolve("materials.json");
+            .resolve("wwwroot")
+            .resolve("data")
+            .resolve("materials.json");
 
         if (!Files.exists(path.getParent())) {
             Files.createDirectories(path.getParent());
@@ -249,10 +249,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         }
 
         Path modelsPath = plugin.getDataFolder().toPath()
-        .resolve("wwwroot")
-        .resolve("data")
-        .resolve("models")
-        .resolve("block");
+            .resolve("wwwroot")
+            .resolve("data")
+            .resolve("models")
+            .resolve("block");
 
         if (!Files.exists(modelsPath)) {
             Files.createDirectories(modelsPath);
