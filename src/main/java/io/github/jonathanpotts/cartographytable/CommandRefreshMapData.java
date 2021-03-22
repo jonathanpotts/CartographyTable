@@ -134,6 +134,19 @@ public class CommandRefreshMapData implements CommandExecutor {
         } catch (IOException e) {
             throw new IOException("Unable to save server data", e);
         }
+
+        Path licensePath = plugin.getDataFolder().toPath()
+        .resolve("wwwroot")
+        .resolve("data")
+        .resolve("LICENSE.txt");
+
+        String license = "Use of this data is subject to the Minecraft EULA - https://account.mojang.com/documents/minecraft_eula";
+
+        try {
+            Files.write(licensePath, license.getBytes());
+        } catch (IOException e) {
+            throw new IOException("Unable to save license data", e);
+        }
     }
 
     private void generateMaterialsData() throws IOException {
