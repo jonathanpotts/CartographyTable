@@ -48,6 +48,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     private static final byte MIN_LIGHT_LEVEL = 0;
     private static final byte MAX_LIGHT_LEVEL = 15;
     private static final String VERSION_MANIFEST = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+    private static final String LICENSE = "Use of this data is subject to the Minecraft EULA - https://account.mojang.com/documents/minecraft_eula";
 
     private Plugin plugin;
     private boolean isRefreshing = false;
@@ -140,10 +141,8 @@ public class CommandRefreshMapData implements CommandExecutor {
         .resolve("data")
         .resolve("LICENSE.txt");
 
-        String license = "Use of this data is subject to the Minecraft EULA - https://account.mojang.com/documents/minecraft_eula";
-
         try {
-            Files.write(licensePath, license.getBytes());
+            Files.write(licensePath, LICENSE.getBytes());
         } catch (IOException e) {
             throw new IOException("Unable to save license data", e);
         }
