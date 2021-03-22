@@ -1,6 +1,8 @@
 package io.github.jonathanpotts.cartographytable
 
-import org.bukkit.command.*
+import org.bukkit.command.Command
+import org.bukkit.command.CommandExecutor
+import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 
 class CommandRefreshMapData(val plugin: JavaPlugin) : CommandExecutor {
