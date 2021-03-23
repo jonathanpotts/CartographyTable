@@ -63,6 +63,9 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
             downloadMaterialTexturesAndModels()
 
             isExecuting = false
+            SpigotHelpers.runOnServerThread(plugin) {
+                plugin.logger.info("Map data has been refreshed")
+            }
         }
 
         return true
@@ -102,17 +105,16 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
      * Generates material data and saves it.
      */
     private fun generateMaterialData() {
-        val materials = Material.values().filter { material ->
-            material.isBlock
-        }.associate { material ->
-            Pair(
-                material.ordinal,
-                material.createBlockData()
-                    .asString
-                    .split("[")
-                    .first()
-            )
-        }
+        val materials = Material.values().filter { it.isBlock }
+            .associate {
+                Pair(
+                    it.ordinal,
+                    it.createBlockData()
+                        .asString
+                        .split("[")
+                        .first()
+                )
+            }
 
         val materialsJson = Json.encodeToString(materials)
         webDataFolder.mkdirs()
@@ -161,16 +163,14 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
         val zipBlockTexturesFolder = fs.getPath("assets", "minecraft", "textures", "block")
 
         withContext(Dispatchers.IO) {
-            Files.walk(zipBlockTexturesFolder).forEach { source ->
-                run {
-                    val destination = blockTexturesFolder.resolve(zipBlockTexturesFolder.relativize(source).toString())
-                    if (destination.isDirectory) {
-                        destination.mkdirs()
-                        return@run
-                    }
-
-                    Files.copy(source, destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            Files.walk(zipBlockTexturesFolder).forEach {
+                val destination = blockTexturesFolder.resolve(zipBlockTexturesFolder.relativize(it).toString())
+                if (destination.isDirectory) {
+                    destination.mkdirs()
+                    return@forEach
                 }
+
+                Files.copy(it, destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
         }
 
@@ -180,16 +180,14 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
         val zipBlockModelsFolder = fs.getPath("assets", "minecraft", "models", "block")
 
         withContext(Dispatchers.IO) {
-            Files.walk(zipBlockModelsFolder).forEach { source ->
-                run {
-                    val destination = blockModelsFolder.resolve(zipBlockModelsFolder.relativize(source).toString())
-                    if (destination.isDirectory) {
-                        destination.mkdirs()
-                        return@run
-                    }
-
-                    Files.copy(source, destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            Files.walk(zipBlockModelsFolder).forEach {
+                val destination = blockModelsFolder.resolve(zipBlockModelsFolder.relativize(it).toString())
+                if (destination.isDirectory) {
+                    destination.mkdirs()
+                    return@forEach
                 }
+
+                Files.copy(it, destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
         }
 
