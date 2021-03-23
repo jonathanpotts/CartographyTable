@@ -147,6 +147,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
                 ?: throw IOException("Unable to get URL for client from latest release manifest")
 
         response = client.get(mcClient)
+        @Suppress("BlockingMethodInNonBlockingContext")
         val clientFile = withContext(Dispatchers.IO) {
             File.createTempFile("CartographyTable", ".zip")
         }
@@ -154,6 +155,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
         clientFile.writeBytes(response.readBytes())
 
         val fs = withContext(Dispatchers.IO) {
+            @Suppress("BlockingMethodInNonBlockingContext")
             FileSystems.newFileSystem(clientFile.toPath(), null)
         }
 
@@ -162,6 +164,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
 
         val zipBlockTexturesFolder = fs.getPath("assets", "minecraft", "textures", "block")
 
+        @Suppress("BlockingMethodInNonBlockingContext")
         withContext(Dispatchers.IO) {
             Files.walk(zipBlockTexturesFolder).forEach {
                 val destination = blockTexturesFolder.resolve(zipBlockTexturesFolder.relativize(it).toString())
@@ -179,6 +182,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
 
         val zipBlockModelsFolder = fs.getPath("assets", "minecraft", "models", "block")
 
+        @Suppress("BlockingMethodInNonBlockingContext")
         withContext(Dispatchers.IO) {
             Files.walk(zipBlockModelsFolder).forEach {
                 val destination = blockModelsFolder.resolve(zipBlockModelsFolder.relativize(it).toString())
