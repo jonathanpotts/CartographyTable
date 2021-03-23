@@ -1,5 +1,7 @@
 package io.github.jonathanpotts.cartographytable.models
 
+import kotlinx.serialization.Serializable
+
 /**
  * Stores data used to process a block.
  *
@@ -7,6 +9,7 @@ package io.github.jonathanpotts.cartographytable.models
  * @property data Additional block data.
  * @property light Map containing lighting data.
  */
+@Serializable
 data class BlockModel(
     var mat: Int = -1,
     var data: String? = null,
