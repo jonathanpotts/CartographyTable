@@ -1,6 +1,6 @@
 plugins {
-    kotlin("js") version "1.4.31"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.4.31"
+    kotlin("js")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 group = "com.jonathanpotts"
@@ -11,24 +11,15 @@ repositories {
 }
 
 kotlin {
-    js().browser()
-
-    sourceSets {
-        val main by getting {
-            dependencies {
-                implementation(project(":shared"))
-                implementation(kotlin("stdlib-common"))
-                implementation(kotlin("stdlib-js"))
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
-            }
-        }
-
-        val test by getting {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-                implementation(kotlin("test-js"))
-            }
-        }
+    js {
+        browser()
+        binaries.executable()
     }
+}
+
+dependencies {
+    implementation(project(":shared"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+
+    testImplementation(kotlin("test-js"))
 }
