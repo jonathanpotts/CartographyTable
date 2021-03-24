@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.4.31"
 }
 
-group = "io.github.jonathanpotts"
+group = "com.jonathanpotts"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -16,6 +16,7 @@ kotlin {
     sourceSets {
         val main by getting {
             dependencies {
+                implementation(project(":shared"))
                 implementation(kotlin("stdlib-common"))
                 implementation(kotlin("stdlib-js"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")

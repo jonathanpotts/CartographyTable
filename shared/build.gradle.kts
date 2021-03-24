@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.4.31"
 }
 
-group = "io.github.jonathanpotts"
+group = "com.jonathanpotts"
 version = "1.0-SNAPSHOT"
 
 repositories {

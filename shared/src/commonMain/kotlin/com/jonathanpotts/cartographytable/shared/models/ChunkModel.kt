@@ -1,4 +1,4 @@
-package io.github.jonathanpotts.cartographytable.shared.models
+package com.jonathanpotts.cartographytable.shared.models
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package io.github.jonathanpotts.cartographytable.spigot
+package com.jonathanpotts.cartographytable.spigot
 
 import org.bukkit.plugin.java.JavaPlugin
 

@@ -1,4 +1,4 @@
-package io.github.jonathanpotts.cartographytable.shared
+package com.jonathanpotts.cartographytable.shared
 
 /**
  * Constants used by CartographyTable.

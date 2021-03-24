@@ -4,7 +4,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-group = "io.github.jonathanpotts"
+group = "com.jonathanpotts"
 version = "1.0-SNAPSHOT"
 
 repositories {
