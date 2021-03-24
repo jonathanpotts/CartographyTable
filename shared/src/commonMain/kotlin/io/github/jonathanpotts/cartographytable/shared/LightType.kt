@@ -1,4 +1,4 @@
-package io.github.jonathanpotts.cartographytable
+package io.github.jonathanpotts.cartographytable.shared
 
 /**
  * Lighting types stored in block data.

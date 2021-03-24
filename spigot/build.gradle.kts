@@ -13,22 +13,37 @@ repositories {
     maven { url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots") }
 }
 
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
-    implementation("io.ktor:ktor-client-core:1.5.2")
-    implementation("io.ktor:ktor-client-cio:1.5.2")
+kotlin {
+    target {
+        val main by compilations.getting {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+    }
 
-    testImplementation(kotlin("test"))
-    testImplementation(kotlin("test-junit"))
+    sourceSets {
+        val main by getting {
+            dependencies {
+                implementation(project(":shared"))
+                implementation(kotlin("stdlib-common"))
+                implementation(kotlin("stdlib-jdk8"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+                implementation("io.ktor:ktor-client-core:1.5.2")
+                implementation("io.ktor:ktor-client-cio:1.5.2")
 
-    compileOnly("org.spigotmc:spigot-api:1.14.4-R0.1-SNAPSHOT")
-}
+                compileOnly("org.spigotmc:spigot-api:1.14.4-R0.1-SNAPSHOT")
+            }
+        }
 
-tasks.compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+        val test by getting {
+            dependencies {
+                implementation(kotlin("test-common"))
+                implementation(kotlin("test-annotations-common"))
+                implementation(kotlin("test-junit"))
+            }
+        }
+    }
 }
 
 tasks.jar {

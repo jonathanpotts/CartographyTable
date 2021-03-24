@@ -1,6 +1,7 @@
-package io.github.jonathanpotts.cartographytable
+package io.github.jonathanpotts.cartographytable.spigot
 
-import io.github.jonathanpotts.cartographytable.models.*
+import io.github.jonathanpotts.cartographytable.shared.*
+import io.github.jonathanpotts.cartographytable.shared.models.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
