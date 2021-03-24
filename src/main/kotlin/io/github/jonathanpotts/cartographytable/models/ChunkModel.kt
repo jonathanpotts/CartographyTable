@@ -9,6 +9,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ChunkModel(
-    var blocks: MutableMap<Short, Map<Byte, Map<Byte, BlockModel>>> =
+    var blocks: MutableMap<Int, MutableMap<Int, MutableMap<Int, BlockModel>>> =
         mutableMapOf()
 )

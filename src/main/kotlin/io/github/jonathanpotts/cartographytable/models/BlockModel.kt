@@ -13,5 +13,5 @@ import kotlinx.serialization.Serializable
 data class BlockModel(
     var mat: Int = -1,
     var data: String? = null,
-    var light: MutableMap<Int, Byte> = mutableMapOf()
+    var light: MutableMap<Int, Int> = mutableMapOf()
 )
