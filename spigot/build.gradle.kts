@@ -27,6 +27,14 @@ dependencies {
     compileOnly("org.spigotmc:spigot-api:1.14.4-R0.1-SNAPSHOT")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+tasks.compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks.jar {
+    archiveBaseName.set("${rootProject.name}-${project.name}")
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("${rootProject.name}-${project.name}")
 }
