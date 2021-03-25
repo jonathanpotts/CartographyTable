@@ -65,7 +65,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
             processWorlds()
 
             isExecuting = false
-            SpigotHelpers.runOnServerThread(plugin) {
+            plugin.runOnServerThread {
                 plugin.logger.info("Map data has been refreshed")
             }
         }
@@ -79,7 +79,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
     private suspend fun generateServerData() {
         val serverModel = ServerModel()
 
-        SpigotHelpers.runOnServerThread(plugin) {
+        plugin.runOnServerThread {
             serverModel.motd = plugin.server.motd
 
             for (world in plugin.server.worlds) {
@@ -114,7 +114,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
      * Generates material data and saves it.
      */
     private suspend fun generateMaterialData() {
-        val materials = SpigotHelpers.runOnServerThread(plugin) {
+        val materials = plugin.runOnServerThread {
             Material.values().filter { it.isBlock }
                 .associate {
                     Pair(
@@ -220,7 +220,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
      * Processes worlds and saves data.
      */
     private suspend fun processWorlds() {
-        val worlds = SpigotHelpers.runOnServerThread(plugin) { plugin.server.worlds }
+        val worlds = plugin.runOnServerThread { plugin.server.worlds }
         for (world in worlds) {
             processWorld(world)
         }
@@ -232,7 +232,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
      * @param world The world to process.
      */
     private suspend fun processWorld(world: World) {
-        val worldFolder = SpigotHelpers.runOnServerThread(plugin) { world.worldFolder }
+        val worldFolder = plugin.runOnServerThread { world.worldFolder }
         val regionFolder = worldFolder.resolve("region")
         if (!regionFolder.exists()) {
             return
@@ -244,15 +244,13 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
             }
         }
 
-        val chunkCoords = chunkFiles?.map {
+        val chunkCoordinates = chunkFiles?.map {
             val splitName = it.name.split(".")
             VectorXZ(splitName[1].toInt(), splitName[2].toInt())
         }
 
-        chunkCoords?.forEach {
-            val chunk = SpigotHelpers.runOnServerThread(plugin) {
-                world.getChunkAt(it.x, it.z)
-            }
+        chunkCoordinates?.forEach {
+            val chunk = plugin.runOnServerThread { world.getChunkAt(it.x, it.z) }
 
             processChunk(chunk)
         }
@@ -266,7 +264,7 @@ class CommandRefreshMapData(private val plugin: JavaPlugin) : CommandExecutor {
     private suspend fun processChunk(chunk: Chunk) {
         val snapshot = chunk.chunkSnapshot
 
-        val chunkModel = SpigotHelpers.runOnServerThread(plugin) {
+        val chunkModel = plugin.runOnServerThread {
             val chunkModel = ChunkModel()
 
             for (y in Constants.MIN_BLOCK_Y until chunk.world.maxHeight)
