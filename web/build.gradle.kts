@@ -12,7 +12,12 @@ repositories {
 
 kotlin {
     js {
-        browser()
+        browser {
+            commonWebpackConfig {
+                cssSupport.enabled = true
+            }
+        }
+
         binaries.executable()
     }
 }
