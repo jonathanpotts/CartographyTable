@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform")
+    kotlin("jvm")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
@@ -11,17 +11,19 @@ repositories {
 }
 
 kotlin {
-    jvm {
+    target {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
     }
-    js().browser()
 }
 
 dependencies {
-    commonMainImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 
-    commonTestImplementation(kotlin("test-common"))
-    commonTestImplementation(kotlin("test-annotations-common"))
+    testImplementation(kotlin("test-junit"))
+}
+
+tasks.jar {
+    archiveBaseName.set("${rootProject.name}-${project.name}")
 }
