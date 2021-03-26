@@ -2,9 +2,5 @@ plugins {
     id 'java'
 }
 
-group = 'com.jonathanpotts'
-version = '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
-}
+group 'com.jonathanpotts'
+version '1.0-SNAPSHOT'

@@ -3,13 +3,13 @@ plugins {
     id 'com.github.johnrengelman.shadow'
 }
 
-group = 'com.jonathanpotts'
-version = '1.0-SNAPSHOT'
+group 'com.jonathanpotts'
+version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
-    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
 }
 
 dependencies {
