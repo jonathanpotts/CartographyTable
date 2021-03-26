@@ -1,9 +1,9 @@
-package com.jonathanpotts.cartographytable.shared
+package com.jonathanpotts.cartographytable.shared;
 
 /**
  * Lighting types stored in block data.
  */
-enum class LightType {
+public enum LightType {
     /**
      * Light from the sky.
      */

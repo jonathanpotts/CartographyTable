@@ -1,4 +1,4 @@
 rootProject.name = "CartographyTable"
 
-include("shared")
-include("spigot")
+include 'shared'
+include 'spigot'
