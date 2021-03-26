@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable.spigot;
+package com.jonathanpotts.cartographytable.bukkit;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;

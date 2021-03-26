@@ -1,6 +1,6 @@
 name: CartographyTable
 version: 1.0
-main: com.jonathanpotts.cartographytable.spigot.CartographyTable
+main: com.jonathanpotts.cartographytable.bukkit.CartographyTable
 api-version: 1.14
 commands:
   refresh-map-data:
