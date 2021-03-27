@@ -24,6 +24,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       title: 'CartographyTable',
+      template: 'src/index.html',
     }),
   ],
 };
