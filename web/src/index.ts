@@ -2,10 +2,11 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+
+import '@babylonjs/core/Materials/standardMaterial';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas, true);
@@ -15,7 +16,7 @@ function createScene(): Scene {
 
   const box = MeshBuilder.CreateBox('box', {}, scene);
 
-  const dirtMat = new StandardMaterial('dirtMat', scene);
+  const dirtMat = new BackgroundMaterial('dirtMat', scene);
   dirtMat.diffuseTexture = new Texture('data/textures/block/dirt.png', scene, true, false, Texture.NEAREST_NEAREST);
   box.material = dirtMat;
 
@@ -25,8 +26,6 @@ function createScene(): Scene {
   camera.keysLeft.push(65);
   camera.keysRight.push(68);
   camera.attachControl(canvas, true);
-
-  const light = new HemisphericLight('light', new Vector3(1, 1, 0), scene);
 
   return scene;
 }
