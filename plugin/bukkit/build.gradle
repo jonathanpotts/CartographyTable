@@ -1,27 +1,27 @@
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow'
+  id 'java'
+  id 'com.github.johnrengelman.shadow'
 }
 
 group 'com.jonathanpotts'
 version '1.0-SNAPSHOT'
 
 repositories {
-    mavenCentral()
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
+  mavenCentral()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+  maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
 }
 
 dependencies {
-    implementation project(':shared')
+  implementation project(':shared')
 
-    compileOnly 'org.bukkit:bukkit:1.14.4-R0.1-SNAPSHOT'
+  compileOnly 'org.bukkit:bukkit:1.14.4-R0.1-SNAPSHOT'
 }
 
 tasks.jar {
-    archivesBaseName = "${rootProject.name}-${project.name}"
+  archivesBaseName = "${rootProject.name}-${project.name}"
 }
 
 tasks.shadowJar {
-    archivesBaseName = "${rootProject.name}-${project.name}"
+  archivesBaseName = "${rootProject.name}-${project.name}"
 }
