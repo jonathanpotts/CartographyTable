@@ -4,8 +4,8 @@ import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
-
-import '@babylonjs/core/Materials/standardMaterial';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas, true);
@@ -14,6 +14,10 @@ function createScene(): Scene {
   const scene = new Scene(engine);
 
   const box = MeshBuilder.CreateBox('box', {}, scene);
+
+  const dirtMat = new StandardMaterial('dirtMat', scene);
+  dirtMat.diffuseTexture = new Texture('data/textures/block/dirt.png', scene, true, false, Texture.NEAREST_NEAREST);
+  box.material = dirtMat;
 
   const camera = new UniversalCamera('camera', new Vector3(0, 0, -10), scene);
   camera.keysUp.push(87);
