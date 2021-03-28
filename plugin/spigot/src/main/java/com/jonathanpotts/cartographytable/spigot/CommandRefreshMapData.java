@@ -100,11 +100,10 @@ public class CommandRefreshMapData implements CommandExecutor {
    *
    * @throws IOException Thrown if there an issue when saving the data.
    */
-  private void generateServerData() throws IOException {
-    ServerModel serverModel = new ServerModel();
-
-    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-      serverModel.motd = plugin.getServer().getMotd();
+  private void generateServerData() throws InterruptedException, ExecutionException, IOException {
+    ServerModel serverModel = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+      ServerModel model = new ServerModel();
+      model.motd = plugin.getServer().getMotd();
 
       for (World world : plugin.getServer().getWorlds()) {
         WorldModel worldModel = new WorldModel();
@@ -115,15 +114,15 @@ public class CommandRefreshMapData implements CommandExecutor {
         worldModel.minHeight = 0;
         worldModel.maxHeight = world.getMaxHeight();
 
-        if (serverModel.worlds == null) {
-          serverModel.worlds = new ArrayList<>();
+        if (model.worlds == null) {
+          model.worlds = new ArrayList<>();
         }
 
-        serverModel.worlds.add(worldModel);
+        model.worlds.add(worldModel);
       }
 
-      return null;
-    });
+      return model;
+    }).get();
 
     String serverJson = gson.toJson(serverModel);
 
@@ -140,19 +139,20 @@ public class CommandRefreshMapData implements CommandExecutor {
    *
    * @throws IOException Thrown if there an issue when saving the data.
    */
-  private void generateMaterialData() throws IOException {
-    Map<Integer, String> materials = new HashMap<>();
-    plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+  private void generateMaterialData() throws InterruptedException, ExecutionException, IOException {
+    Map<Integer, String> materials = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+      Map<Integer, String> map = new HashMap<>();
+
       for (Material material : Material.values()) {
         if (!material.isBlock()) {
           continue;
         }
 
-        materials.put(material.ordinal(), material.createBlockData().getAsString().split("\\[")[0]);
+        map.put(material.ordinal(), material.createBlockData().getAsString().split("\\[")[0]);
       }
 
-      return null;
-    });
+      return map;
+    }).get();
 
     String materialsJson = gson.toJson(materials);
 
@@ -331,8 +331,7 @@ public class CommandRefreshMapData implements CommandExecutor {
       for (int y = 0; y < chunk.getWorld().getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(0, chunk.getWorld().getMaxHeight(),
-                snapshot, x, y, z);
+            BlockModel blockModel = processBlock(0, chunk.getWorld().getMaxHeight(), snapshot, x, y, z);
 
             if (blockModel == null) {
               continue;
