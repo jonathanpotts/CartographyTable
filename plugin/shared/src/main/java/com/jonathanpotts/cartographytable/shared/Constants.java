@@ -43,5 +43,5 @@ public final class Constants {
    * The notice for the Minecraft EULA.
    */
   public static final String MINECRAFT_LICENSE_NOTICE = "Use of this data is subject to the Minecraft EULA - "
-      + "https://account.mojang.com/documents/minecraft_eula";
+      + "https://www.minecraft.net/eula";
 }
