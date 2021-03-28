@@ -15,6 +15,11 @@ public class WorldModel {
   public VectorXYZ spawn;
 
   /**
+   * The minimum height of the world.
+   */
+  public int minHeight;
+
+  /**
    * The maximum height of the world.
    */
   public int maxHeight;

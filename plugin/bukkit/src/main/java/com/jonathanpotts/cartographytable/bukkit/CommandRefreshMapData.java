@@ -112,6 +112,9 @@ public class CommandRefreshMapData implements CommandExecutor {
         worldModel.spawn = new VectorXYZ(world.getSpawnLocation().getBlockX(), world.getSpawnLocation().getBlockY(),
             world.getSpawnLocation().getBlockZ());
 
+        worldModel.minHeight = world.getMinHeight();
+        worldModel.maxHeight = world.getMaxHeight();
+
         if (serverModel.worlds == null) {
           serverModel.worlds = new ArrayList<>();
         }
@@ -325,10 +328,10 @@ public class CommandRefreshMapData implements CommandExecutor {
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
       ChunkModel model = new ChunkModel();
 
-      for (int y = 0; y < chunk.getWorld().getMaxHeight(); y++) {
+      for (int y = chunk.getWorld().getMinHeight(); y < chunk.getWorld().getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(chunk.getWorld().getMaxHeight(), snapshot, x, y, z);
+            BlockModel blockModel = processBlock(chunk.getWorld().getMinHeight(), chunk.getWorld().getMaxHeight(), snapshot, x, y, z);
 
             if (blockModel == null) {
               continue;
@@ -363,6 +366,7 @@ public class CommandRefreshMapData implements CommandExecutor {
   /**
    * Processes a block.
    *
+   * @param minHeight     Minimum height of the world.
    * @param maxHeight     Maximum height of the world.
    * @param chunkSnapshot Snapshot of the chunk containing the block.
    * @param x             X coordinate of the block in the chunk.
@@ -370,13 +374,13 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @param z             Z coordinate of the block in the chunk.
    * @return The processes block data.
    */
-  private BlockModel processBlock(int maxHeight, ChunkSnapshot chunkSnapshot, int x, int y, int z) {
+  private BlockModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, int x, int y, int z) {
     BlockData blockData = chunkSnapshot.getBlockData(x, y, z);
 
     if (blockData.getMaterial().isAir()) {
       boolean surroundedByAir = true;
 
-      if (y > 0) {
+      if (y > minHeight) {
         surroundedByAir = chunkSnapshot.getBlockData(x, y - 1, z).getMaterial().isAir();
       }
 
