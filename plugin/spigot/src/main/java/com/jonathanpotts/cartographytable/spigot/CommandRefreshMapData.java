@@ -112,7 +112,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         worldModel.spawn = new VectorXYZ(world.getSpawnLocation().getBlockX(), world.getSpawnLocation().getBlockY(),
             world.getSpawnLocation().getBlockZ());
 
-        worldModel.minHeight = world.getMinHeight();
+        worldModel.minHeight = 0;
         worldModel.maxHeight = world.getMaxHeight();
 
         if (serverModel.worlds == null) {
@@ -331,7 +331,7 @@ public class CommandRefreshMapData implements CommandExecutor {
       for (int y = chunk.getWorld().getMinHeight(); y < chunk.getWorld().getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(chunk.getWorld().getMinHeight(), chunk.getWorld().getMaxHeight(),
+            BlockModel blockModel = processBlock(0, chunk.getWorld().getMaxHeight(),
                 snapshot, x, y, z);
 
             if (blockModel == null) {
