@@ -1,4 +1,4 @@
-rootProject.name = "CartographyTable"
+rootProject.name = 'BlockMaps'
 
 include 'shared'
 include 'spigot'

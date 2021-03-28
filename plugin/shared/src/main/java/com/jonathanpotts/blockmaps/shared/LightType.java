@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable.shared;
+package com.jonathanpotts.blockmaps.shared;
 
 /**
  * Lighting types stored in block data.

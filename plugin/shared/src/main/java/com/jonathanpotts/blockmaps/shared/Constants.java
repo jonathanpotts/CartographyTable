@@ -1,7 +1,7 @@
-package com.jonathanpotts.cartographytable.shared;
+package com.jonathanpotts.blockmaps.shared;
 
 /**
- * Constants used by CartographyTable.
+ * Constants used by BlockMaps.
  */
 public final class Constants {
   /**

@@ -1,4 +1,4 @@
-package com.jonathanpotts.cartographytable.shared.models;
+package com.jonathanpotts.blockmaps.shared.models;
 
 /**
  * Stores data needed to process a world.

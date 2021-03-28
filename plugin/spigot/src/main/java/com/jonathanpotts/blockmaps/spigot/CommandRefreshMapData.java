@@ -1,10 +1,10 @@
-package com.jonathanpotts.cartographytable.spigot;
+package com.jonathanpotts.blockmaps.spigot;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import com.jonathanpotts.cartographytable.shared.Constants;
-import com.jonathanpotts.cartographytable.shared.LightType;
-import com.jonathanpotts.cartographytable.shared.models.*;
+import com.jonathanpotts.blockmaps.shared.Constants;
+import com.jonathanpotts.blockmaps.shared.LightType;
+import com.jonathanpotts.blockmaps.shared.models.*;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
@@ -198,7 +198,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     String client = jsonObject.get("downloads").getAsJsonObject().get("client").getAsJsonObject().get("url")
         .getAsString();
 
-    Path clientTempFile = Files.createTempFile("CartographyTable", ".zip");
+    Path clientTempFile = Files.createTempFile("BlockMaps", ".zip");
 
     try (InputStream clientStream = new URL(client).openStream()) {
       Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
