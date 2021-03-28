@@ -328,7 +328,7 @@ public class CommandRefreshMapData implements CommandExecutor {
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
       ChunkModel model = new ChunkModel();
 
-      for (int y = chunk.getWorld().getMinHeight(); y < chunk.getWorld().getMaxHeight(); y++) {
+      for (int y = 0; y < chunk.getWorld().getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
             BlockModel blockModel = processBlock(0, chunk.getWorld().getMaxHeight(),
