@@ -270,7 +270,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     Set<String> files = Files.list(regionPath).filter(p -> !Files.isDirectory(p)).map(Path::getFileName)
         .map(Path::toString).collect(Collectors.toSet());
 
-    Set<VectorXZ> chunkCoordinates = new HashSet<>();
+    Set<VectorXZ> regionCoordinates = new HashSet<>();
 
     for (String file : files) {
       String[] splitName = file.split("\\.");
@@ -282,30 +282,52 @@ public class CommandRefreshMapData implements CommandExecutor {
       int x = Integer.parseInt(splitName[1]);
       int z = Integer.parseInt(splitName[2]);
 
-      chunkCoordinates.add(new VectorXZ(x, z));
+      regionCoordinates.add(new VectorXZ(x, z));
     }
 
-    for (VectorXZ coordinates : chunkCoordinates) {
-      Chunk chunk = plugin.getServer().getScheduler()
-          .callSyncMethod(plugin, () -> world.getChunkAt(coordinates.x, coordinates.z)).get();
+    for (VectorXZ coordinates : regionCoordinates) {
+      processRegion(world, coordinates);
+    }
+  }
 
-      processChunk(chunk);
+  /**
+   * Processes a region and saves data.
+   * 
+   * @param world       World containing the region.
+   * @param coordinates Coordinates of the region.
+   */
+  private void processRegion(World world, VectorXZ coordinates)
+      throws InterruptedException, ExecutionException, IOException {
+    int startX = coordinates.x * Constants.WIDTH_OF_REGION;
+    int startZ = coordinates.z * Constants.DEPTH_OF_REGION;
+
+    for (int x = startX; x < startX + Constants.WIDTH_OF_REGION; x++) {
+      for (int z = startZ; z < startZ + Constants.DEPTH_OF_REGION; z++) {
+        processChunk(world, new VectorXZ(x, z));
+      }
     }
   }
 
   /**
    * Processes a chunk and saves data.
    *
-   * @param chunk Chunk to process.
+   * @param world       World containing the chunk.
+   * @param coordinates Coordinates of the chunk.
    */
-  private void processChunk(Chunk chunk) throws InterruptedException, ExecutionException, IOException {
+  private void processChunk(World world, VectorXZ coordinates)
+      throws InterruptedException, ExecutionException, IOException {
     ChunkModel chunkModel = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+      if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
+        return null;
+      }
+
+      Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
       ChunkModel model = new ChunkModel();
 
-      for (int y = Constants.MIN_BLOCK_Y; y < chunk.getWorld().getMaxHeight(); y++) {
-        for (int x = Constants.MIN_X_FOR_BLOCK_IN_CHUNK; x <= Constants.MAX_X_FOR_BLOCK_IN_CHUNK; x++) {
-          for (int z = Constants.MIN_Z_FOR_BLOCK_IN_CHUNK; z <= Constants.MAX_Z_FOR_BLOCK_IN_CHUNK; z++) {
+      for (int y = 0; y < chunk.getWorld().getMaxHeight(); y++) {
+        for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
+          for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
             BlockModel blockModel = processBlock(chunk.getWorld().getMaxHeight(), snapshot, x, y, z);
 
             if (blockModel == null) {
@@ -327,10 +349,14 @@ public class CommandRefreshMapData implements CommandExecutor {
       return model;
     }).get();
 
+    if (chunkModel == null) {
+      return;
+    }
+
     String chunkJson = gson.toJson(chunkModel);
-    Path worldPath = webDataPath.resolve(chunk.getWorld().getName());
+    Path worldPath = webDataPath.resolve(world.getName());
     Files.createDirectories(worldPath);
-    Path chunkPath = worldPath.resolve(chunk.getX() + "." + chunk.getZ() + ".json");
+    Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json");
     Files.write(chunkPath, chunkJson.getBytes());
   }
 
@@ -350,7 +376,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     if (blockData.getMaterial().isAir()) {
       boolean surroundedByAir = true;
 
-      if (y > Constants.MIN_BLOCK_Y) {
+      if (y > 0) {
         surroundedByAir = chunkSnapshot.getBlockData(x, y - 1, z).getMaterial().isAir();
       }
 
@@ -361,13 +387,11 @@ public class CommandRefreshMapData implements CommandExecutor {
       // Keep edge blocks on X and Z axes in case of needing light information in a
       // different chunk.
 
-      surroundedByAir = x > Constants.MIN_X_FOR_BLOCK_IN_CHUNK && surroundedByAir
-          && chunkSnapshot.getBlockData(x - 1, y, z).getMaterial().isAir();
-      surroundedByAir = x < Constants.MAX_X_FOR_BLOCK_IN_CHUNK && surroundedByAir
+      surroundedByAir = x > 0 && surroundedByAir && chunkSnapshot.getBlockData(x - 1, y, z).getMaterial().isAir();
+      surroundedByAir = x < Constants.WIDTH_OF_CHUNK - 1 && surroundedByAir
           && chunkSnapshot.getBlockData(x + 1, y, z).getMaterial().isAir();
-      surroundedByAir = z > Constants.MIN_Z_FOR_BLOCK_IN_CHUNK && surroundedByAir
-          && chunkSnapshot.getBlockData(x, y, z - 1).getMaterial().isAir();
-      surroundedByAir = z < Constants.MAX_Z_FOR_BLOCK_IN_CHUNK && surroundedByAir
+      surroundedByAir = z > 0 && surroundedByAir && chunkSnapshot.getBlockData(x, y, z - 1).getMaterial().isAir();
+      surroundedByAir = z < Constants.DEPTH_OF_CHUNK - 1 && surroundedByAir
           && chunkSnapshot.getBlockData(x, y, z + 1).getMaterial().isAir();
 
       if (surroundedByAir) {

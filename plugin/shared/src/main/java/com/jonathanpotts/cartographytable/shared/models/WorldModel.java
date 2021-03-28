@@ -13,4 +13,9 @@ public class WorldModel {
    * The spawn point of the world.
    */
   public VectorXYZ spawn;
+
+  /**
+   * The maximum height of the world.
+   */
+  public int maxHeight;
 }
