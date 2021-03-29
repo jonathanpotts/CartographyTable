@@ -5,12 +5,14 @@
   "sideEffects": false,
   "scripts": {
     "test": "mocha",
-    "build": "webpack",
+    "build:dev": "webpack --env dev --mode development",
+    "build:prod": "webpack --env prod --mode production",
     "start": "webpack serve"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
+    "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^5.2.0",
     "eslint": "^7.23.0",
     "eslint-config-airbnb-base": "^14.2.1",
