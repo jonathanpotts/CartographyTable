@@ -225,7 +225,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
       Path colorMapsPath = webDataPath.resolve("textures").resolve("colormap");
 
-      Files.createDirectories(texturesPath);
+      Files.createDirectories(colorMapsPath);
 
       Path zipColorMapsPath = fs.getRootDirectories().iterator().next().resolve("assets").resolve("minecraft")
           .resolve("textures").resolve("colormap");
