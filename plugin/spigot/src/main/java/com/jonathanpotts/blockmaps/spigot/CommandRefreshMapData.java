@@ -3,12 +3,12 @@ package com.jonathanpotts.blockmaps.spigot;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.jonathanpotts.blockmaps.shared.Constants;
-import com.jonathanpotts.blockmaps.shared.LightType;
 import com.jonathanpotts.blockmaps.shared.models.*;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -72,6 +72,7 @@ public class CommandRefreshMapData implements CommandExecutor {
       try {
         generateServerData();
         generateMaterialData();
+        generateBiomeData();
         downloadMaterialTexturesAndModels();
         processWorlds();
 
@@ -159,6 +160,29 @@ public class CommandRefreshMapData implements CommandExecutor {
     Files.createDirectories(webDataPath);
     Path materialsPath = webDataPath.resolve("materials.json");
     Files.write(materialsPath, materialsJson.getBytes());
+  }
+
+  /**
+   * Generates biome data and saves it.
+   *
+   * @throws IOException Thrown if there an issue when saving the data.
+   */
+  private void generateBiomeData() throws InterruptedException, ExecutionException, IOException {
+    Map<Integer, String> biomes = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+      Map<Integer, String> map = new HashMap<>();
+
+      for (Biome biome : Biome.values()) {
+        map.put(biome.ordinal(), biome.toString());
+      }
+
+      return map;
+    }).get();
+
+    String biomesJson = gson.toJson(biomes);
+
+    Files.createDirectories(webDataPath);
+    Path biomesPath = webDataPath.resolve("biomes.json");
+    Files.write(biomesPath, biomesJson.getBytes());
   }
 
   /**
@@ -346,10 +370,10 @@ public class CommandRefreshMapData implements CommandExecutor {
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
       ChunkModel model = new ChunkModel();
 
-      for (int y = 0; y < chunk.getWorld().getMaxHeight(); y++) {
+      for (int y = 0; y < world.getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(0, chunk.getWorld().getMaxHeight(), snapshot, x, y, z);
+            BlockModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
 
             if (blockModel == null) {
               continue;
@@ -387,12 +411,14 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @param minHeight     Minimum height of the world.
    * @param maxHeight     Maximum height of the world.
    * @param chunkSnapshot Snapshot of the chunk containing the block.
+   * @param world         World containing the block.
    * @param x             X coordinate of the block in the chunk.
    * @param y             Y coordinate of the block in the chunk.
    * @param z             Z coordinate of the block in the chunk.
    * @return The processes block data.
    */
-  private BlockModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, int x, int y, int z) {
+  private BlockModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
+      int z) {
     BlockData blockData = chunkSnapshot.getBlockData(x, y, z);
 
     if (blockData.getMaterial().isAir()) {
@@ -424,7 +450,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     }
 
     BlockModel blockModel = new BlockModel();
-    blockModel.mat = blockData.getMaterial().ordinal();
+    blockModel.material = blockData.getMaterial().ordinal();
 
     String data = blockData.getAsString(true);
     int dataStartIndex = data.indexOf("[");
@@ -444,19 +470,34 @@ public class CommandRefreshMapData implements CommandExecutor {
     int emittedLight = chunkSnapshot.getBlockEmittedLight(x, y, z);
 
     if (skyLight != defaultLightValue) {
-      if (blockModel.light == null) {
-        blockModel.light = new HashMap<>();
-      }
-
-      blockModel.light.put(LightType.SKY.ordinal(), skyLight);
+      blockModel.skyLight = skyLight;
     }
 
     if (emittedLight != defaultLightValue) {
-      if (blockModel.light == null) {
-        blockModel.light = new HashMap<>();
-      }
+      blockModel.emittedLight = emittedLight;
+    }
 
-      blockModel.light.put(LightType.EMITTED.ordinal(), emittedLight);
+    Set<Material> tintedMaterials = new HashSet<Material>();
+    tintedMaterials.add(Material.GRASS_BLOCK);
+    tintedMaterials.add(Material.GRASS);
+    tintedMaterials.add(Material.TALL_GRASS);
+    tintedMaterials.add(Material.FERN);
+    tintedMaterials.add(Material.LARGE_FERN);
+    tintedMaterials.add(Material.POTTED_FERN);
+    tintedMaterials.add(Material.SUGAR_CANE);
+    tintedMaterials.add(Material.OAK_LEAVES);
+    tintedMaterials.add(Material.DARK_OAK_LEAVES);
+    tintedMaterials.add(Material.JUNGLE_LEAVES);
+    tintedMaterials.add(Material.ACACIA_LEAVES);
+    tintedMaterials.add(Material.VINE);
+
+    if (tintedMaterials.contains(blockData.getMaterial())) {
+      blockModel.temperature = world.getTemperature(x, y, z);
+      blockModel.humidity = world.getHumidity(x, y, z);
+    }
+
+    if (blockData.getMaterial() == Material.WATER) {
+      blockModel.biome = world.getBiome(x, y, z).ordinal();
     }
 
     return blockModel;

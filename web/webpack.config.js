@@ -35,7 +35,9 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: 'bundle.css',
+    }),
     new HtmlWebpackPlugin({
       title: 'BlockMaps',
       template: 'src/index.html',
