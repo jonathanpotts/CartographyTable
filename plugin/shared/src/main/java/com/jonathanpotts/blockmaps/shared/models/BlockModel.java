@@ -7,7 +7,7 @@ public class BlockModel {
   /**
    * Material ID ordinal.
    */
-  public int material;
+  public Integer material;
 
   /**
    * Additional block data.
@@ -17,25 +17,25 @@ public class BlockModel {
   /**
    * Sky light value.
    */
-  public int skyLight = -1;
+  public Integer skyLight;
 
   /**
    * Emitted light value.
    */
-  public int emittedLight = -1;
+  public Integer emittedLight;
 
   /**
    * Temperature of the biome the block is in.
    */
-  public double temperature;
+  public Double temperature;
 
   /**
    * Humidity of the biome the block is in.
    */
-  public double humidity;
+  public Double humidity;
 
   /**
    * Biome the block is in.
    */
-  public int biome;
+  public Integer biome;
 }

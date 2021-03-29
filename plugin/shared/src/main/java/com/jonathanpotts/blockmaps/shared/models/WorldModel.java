@@ -17,10 +17,10 @@ public class WorldModel {
   /**
    * The minimum height of the world.
    */
-  public int minHeight;
+  public Integer minHeight;
 
   /**
    * The maximum height of the world.
    */
-  public int maxHeight;
+  public Integer maxHeight;
 }
