@@ -223,6 +223,24 @@ public class CommandRefreshMapData implements CommandExecutor {
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
 
+      Path colorMapsPath = webDataPath.resolve("textures").resolve("colormap");
+
+      Files.createDirectories(texturesPath);
+
+      Path zipColorMapsPath = fs.getRootDirectories().iterator().next().resolve("assets").resolve("minecraft")
+          .resolve("textures").resolve("colormap");
+
+      for (Path source : Files.walk(zipColorMapsPath).collect(Collectors.toSet())) {
+        Path relativePath = zipColorMapsPath.relativize(source);
+        Path destination = colorMapsPath.resolve(relativePath.toString());
+        if (Files.isDirectory(destination)) {
+          Files.createDirectories(destination);
+          continue;
+        }
+
+        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      }
+
       Path modelsPath = webDataPath.resolve("models").resolve("block");
 
       Files.createDirectories(modelsPath);
