@@ -7,6 +7,7 @@ import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgro
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 
 import '@babylonjs/core/Materials/standardMaterial';
+import './index.scss';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas, true);

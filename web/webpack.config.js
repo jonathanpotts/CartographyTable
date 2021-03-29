@@ -1,3 +1,4 @@
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
@@ -9,8 +10,20 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        include: /src/,
         exclude: /node_modules/,
+        use: 'ts-loader',
+      },
+      {
+        test: /\.s[ac]ss$/i,
+        include: /src/,
+        exclude: /node_modules/,
+        sideEffects: true,
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
       },
     ],
   },
@@ -22,7 +35,9 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [
+    new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
+      title: 'BlockMaps',
       template: 'src/index.html',
     }),
   ],
