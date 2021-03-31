@@ -22,10 +22,6 @@ function createScene(): Scene {
   box.material = dirtMat;
 
   const camera = new UniversalCamera('camera', new Vector3(0, 0, -10), scene);
-  camera.keysUp.push(87);
-  camera.keysDown.push(83);
-  camera.keysLeft.push(65);
-  camera.keysRight.push(68);
   camera.attachControl(canvas, true);
 
   return scene;
