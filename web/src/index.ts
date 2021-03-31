@@ -6,11 +6,15 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 
+import WorldLoader from './WorldLoader';
+
 import '@babylonjs/core/Materials/standardMaterial';
 import './index.scss';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas, true);
+
+const worldLoader = new WorldLoader(engine);
 
 function createScene(): Scene {
   const scene = new Scene(engine);
