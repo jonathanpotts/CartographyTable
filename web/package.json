@@ -8,7 +8,7 @@
     "build:dev": "webpack --env dev --mode development",
     "build:prod": "webpack --env prod --mode production",
     "build": "npm run build:prod",
-    "start": "webpack serve"
+    "start": "webpack serve --env dev --mode development"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.19.0",
