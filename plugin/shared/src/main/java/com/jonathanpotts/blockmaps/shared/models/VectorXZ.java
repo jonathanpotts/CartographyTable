@@ -1,7 +1,7 @@
 package com.jonathanpotts.blockmaps.shared.models;
 
 /**
- * Stores a 2D vector containing an X and Z coordinate.
+ * Stores a 2D vector containing a X and Z coordinate.
  */
 public class VectorXZ {
   /**
@@ -15,7 +15,7 @@ public class VectorXZ {
   public int z;
 
   /**
-   * Creates a 2D vector containing an X and Z coordinate.
+   * Creates a 2D vector containing a X and Z coordinate.
    *
    * @param x X coordinate.
    * @param z Z coordinate.
