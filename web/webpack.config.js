@@ -9,10 +9,20 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.tsx?$/i,
         include: /src/,
         exclude: /node_modules/,
         use: 'ts-loader',
+      },
+      {
+        test: /\.css$/i,
+        include: /src/,
+        exclude: /node_modules/,
+        sideEffects: true,
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+        ],
       },
       {
         test: /\.s[ac]ss$/i,
@@ -45,6 +55,5 @@ module.exports = {
   ],
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
-    compress: true,
   },
 };
