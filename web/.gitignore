@@ -117,3 +117,6 @@ dist
 
 # webpack-dev-server served files
 serve
+
+# Visual Studio Code
+.vscode
