@@ -114,6 +114,8 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @throws IOException Thrown if there is an issue copying the files.
    */
   private void copyWebApp() throws URISyntaxException, IOException {
+    Files.createDirectories(pluginDataPath);
+
     URI jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
     Path jarFile = Paths.get(jarFilePath);
 
@@ -128,10 +130,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         Path relativePath = dataPath.relativize(source);
         Path destination = pluginDataPath.resolve(relativePath.toString());
         if (Files.isDirectory(destination)) {
-          Files.createDirectories(destination);
           continue;
         }
 
+        Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
     }
@@ -281,10 +283,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         Path relativePath = zipTexturesPath.relativize(source);
         Path destination = texturesPath.resolve(relativePath.toString());
         if (Files.isDirectory(destination)) {
-          Files.createDirectories(destination);
           continue;
         }
 
+        Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
 
@@ -299,10 +301,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         Path relativePath = zipColorMapsPath.relativize(source);
         Path destination = colorMapsPath.resolve(relativePath.toString());
         if (Files.isDirectory(destination)) {
-          Files.createDirectories(destination);
           continue;
         }
 
+        Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
 
@@ -317,10 +319,10 @@ public class CommandRefreshMapData implements CommandExecutor {
         Path relativePath = zipModelsPath.relativize(source);
         Path destination = modelsPath.resolve(relativePath.toString());
         if (Files.isDirectory(destination)) {
-          Files.createDirectories(destination);
           continue;
         }
 
+        Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
     }
