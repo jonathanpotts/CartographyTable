@@ -399,7 +399,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     }
 
     String chunkJson = gson.toJson(chunkModel);
-    Path worldPath = webDataPath.resolve(world.getName());
+    Path worldPath = webDataPath.resolve("worlds").resolve(world.getName());
     Files.createDirectories(worldPath);
     Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json");
     Files.write(chunkPath, chunkJson.getBytes());

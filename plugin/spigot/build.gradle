@@ -1,6 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id 'java'
   id 'com.github.johnrengelman.shadow'
+  id 'com.github.node-gradle.node'
 }
 
 group 'com.jonathanpotts'
@@ -18,10 +21,36 @@ dependencies {
   compileOnly 'org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT'
 }
 
+node {
+  nodeProjectDir = file("$rootDir/../web")
+}
+
 tasks.jar {
   archivesBaseName = "${rootProject.name}-${project.name}"
 }
 
 tasks.shadowJar {
   archivesBaseName = "${rootProject.name}-${project.name}"
+}
+
+tasks.register('npmBuild', NpmTask) {
+  dependsOn 'npmInstall'
+  args = ['run', 'build']
+}
+
+tasks.register('copyWeb', Copy) {
+  dependsOn 'npmBuild'
+  from "$rootDir/../web/dist"
+  into "$buildDir/resources/main/data/web"
+}
+
+tasks.register('webJar', Jar) {
+  dependsOn 'copyWeb'
+  from sourceSets.main.output
+}
+
+tasks.register('webShadowJar', ShadowJar) {
+  dependsOn 'copyWeb'
+  from sourceSets.main.runtimeClasspath
+  archiveClassifier = 'all'
 }

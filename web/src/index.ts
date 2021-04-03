@@ -6,12 +6,7 @@ const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const engine = new Engine(canvas, true);
 
 const serverLoader = new ServerLoader(engine);
-
-/*
-engine.runRenderLoop(() => {
-  scene.render();
-});
-*/
+serverLoader.load();
 
 window.addEventListener('resize', () => {
   engine.resize();
