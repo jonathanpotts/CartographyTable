@@ -18,6 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
@@ -37,10 +39,18 @@ public class CommandRefreshMapData implements CommandExecutor {
    * The gson object used to process JSON.
    */
   private final Gson gson;
+
+  /**
+   * Folder containing data for the plugin.
+   */
+  private final Path pluginDataPath;
+
   /**
    * Folder containing data for the web app.
    */
+
   private final Path webDataPath;
+
   /**
    * Status of the command execution.
    */
@@ -53,10 +63,11 @@ public class CommandRefreshMapData implements CommandExecutor {
    */
   public CommandRefreshMapData(JavaPlugin plugin) {
     this.plugin = plugin;
-    this.gson = new GsonBuilder().disableHtmlEscaping().create();
+    gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    Path webPath = plugin.getDataFolder().toPath().resolve("web");
-    this.webDataPath = webPath.resolve("data");
+    pluginDataPath = plugin.getDataFolder().toPath();
+    Path webPath = pluginDataPath.resolve("web");
+    webDataPath = webPath.resolve("data");
   }
 
   @Override
@@ -70,6 +81,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       try {
+        copyWebApp();
         generateServerData();
         generateMaterialData();
         generateBiomeData();
@@ -81,7 +93,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
           return null;
         });
-      } catch (IOException | InterruptedException | ExecutionException e) {
+      } catch (URISyntaxException | IOException | InterruptedException | ExecutionException e) {
         plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
           plugin.getLogger().severe("Unable to save map data");
           e.printStackTrace();
@@ -94,6 +106,35 @@ public class CommandRefreshMapData implements CommandExecutor {
     });
 
     return true;
+  }
+
+  /**
+   * Copies the web app into the plugin data folder.
+   * @throws URISyntaxException Thrown if there is an issue with the executable path.
+   * @throws IOException Thrown if there is an issue copying the files.
+   */
+  private void copyWebApp() throws URISyntaxException, IOException {
+    URI jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
+    Path jarFile = Paths.get(jarFilePath);
+
+    try (FileSystem fs = FileSystems.newFileSystem(jarFile, null)) {
+      Path dataPath = fs.getRootDirectories().iterator().next().resolve("data");
+
+      if (!Files.exists(dataPath)) {
+        return;
+      }
+
+      for (Path source : Files.walk(dataPath).collect(Collectors.toSet())) {
+        Path relativePath = dataPath.relativize(source);
+        Path destination = pluginDataPath.resolve(relativePath.toString());
+        if (Files.isDirectory(destination)) {
+          Files.createDirectories(destination);
+          continue;
+        }
+
+        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      }
+    }
   }
 
   /**
@@ -222,7 +263,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     String client = jsonObject.get("downloads").getAsJsonObject().get("client").getAsJsonObject().get("url")
         .getAsString();
 
-    Path clientTempFile = Files.createTempFile("BlockMaps", ".zip");
+    Path clientTempFile = Files.createTempFile("BlockMaps", ".jar");
 
     try (InputStream clientStream = new URL(client).openStream()) {
       Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
