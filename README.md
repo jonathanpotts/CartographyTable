@@ -30,9 +30,11 @@ Put the JAR file in the `plugins` directory of the Spigot server and (re)start t
 
 ### Web server setup
 
+The plugin does not contain an integrated web server to prevent web requests from effecting the performance of the server.
+
 The web app does not require any runtimes to be installed on the web server. It is recommended to configure your server to send the files with gzip compression.
 
-The web app files will be located in the `plugins\BlockMaps\web` directory after running the `refresh-map-data` command. The web server only needs read access to the files.
+The web app files will be located in the `plugins\BlockMaps\web` directory after running the `refresh-map-data` command. The web server only needs read access to the files. The files will be updated as the map changes so therefore the folder should either be the target of a symlink or the files should be shipped to the web server on a frequent basis.
 
 ## Web browser requirements
 
