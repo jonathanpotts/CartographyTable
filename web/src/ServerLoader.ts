@@ -2,7 +2,9 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoxBuilder } from '@babylonjs/core/Meshes/Builders/boxBuilder';
+import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import ServerModel from './models/ServerModel';
@@ -25,6 +27,11 @@ export default class ServerLoader {
   private serverModel!: ServerModel;
 
   /**
+   * Canvas used to render the map.
+   */
+  private canvas: HTMLCanvasElement;
+
+  /**
    * Engine used for rendering the map.
    */
   private engine: Engine;
@@ -39,6 +46,7 @@ export default class ServerLoader {
    * @param canvas Canvas used to render the map.
    */
   public constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
     this.engine = new Engine(canvas, true);
 
     window.addEventListener('resize', () => {
@@ -55,6 +63,8 @@ export default class ServerLoader {
     }
 
     this.loaded = true;
+
+    await Helpers.load();
 
     const response = await fetch('data/server.json');
     if (!response.ok) {
@@ -96,6 +106,8 @@ export default class ServerLoader {
     await ServerLoader.loadChunk(spawnChunk, world, scene);
 
     const camera = new UniversalCamera('camera', new Vector3(world.spawn.x, world.spawn.y + 10, world.spawn.z), scene);
+    camera.attachControl(this.canvas, true);
+    const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
 
     return scene;
   }
@@ -121,23 +133,33 @@ export default class ServerLoader {
       ),
     );
 
+    const loadBlockPromises = [];
+
     for (const [y, yMap] of Object.entries(chunkModel.blocks)) {
       for (const [x, xMap] of Object.entries(yMap)) {
         for (const [z, blockModel] of Object.entries(xMap)) {
-          ServerLoader.loadBlock(
+          loadBlockPromises.push(ServerLoader.loadBlock(
             { x: parseInt(x, 10), y: parseInt(y, 10), z: parseInt(z, 10) },
             blockModel, transform, scene,
-          );
+          ));
         }
       }
     }
+
+    await Promise.all(loadBlockPromises);
   }
 
   private static loadBlock(
     coordinates: VectorXYZ, block: BlockModel, parent: TransformNode, scene: Scene,
   ): void {
+    const materialName = Helpers.getMaterialName(block.material);
+    if (materialName === 'minecraft:air' || materialName === 'minecraft:cave_air' || materialName === 'minecraft:void_air') {
+      return;
+    }
+
     const box = BoxBuilder.CreateBox(`block:${coordinates.x},${coordinates.y},${coordinates.z}`, {}, scene);
     box.parent = parent;
     box.setPositionWithLocalVector(new Vector3(coordinates.x, coordinates.y, coordinates.z));
+    // box.material = new BackgroundMaterial('bg-material', scene);
   }
 }

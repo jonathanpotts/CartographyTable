@@ -9,29 +9,47 @@ export default class Helpers {
   /**
    * The materials map used to look up material names.
    */
-  private static materialsMap: Map<number, string>;
+  private static materialsMap: Record<number, string>;
 
   /**
    * The biomes map used to look up biome names.
    */
-  private static biomesMap: Map<number, string>;
+  private static biomesMap: Record<number, string>;
+
+  /**
+   * Loads data used by the helper methods.
+   */
+  public static async load(): Promise<void> {
+    if (!this.materialsMap) {
+      const materialsResponse = await fetch('data/materials.json');
+      if (!materialsResponse.ok) {
+        throw new Error('Unable to retrieve materials map.');
+      }
+
+      this.materialsMap = await materialsResponse.json();
+    }
+
+    if (!this.biomesMap) {
+      const biomesResponse = await fetch('data/biomes.json');
+      if (!biomesResponse.ok) {
+        throw new Error('Unable to retrieve biomes map.');
+      }
+
+      this.biomesMap = await biomesResponse.json();
+    }
+  }
 
   /**
    * Gets the material name using an ordinal value.
    * @param ordinal Ordinal value for the material.
    * @returns Name of the material or undefined if the ordinal value is not in the materials map.
    */
-  public static async getMaterialName(ordinal: number): Promise<string | undefined> {
+  public static getMaterialName(ordinal: number): string | undefined {
     if (!this.materialsMap) {
-      const response = await fetch('data/materials.json');
-      if (!response.ok) {
-        throw new Error('Unable to retrieve materials map.');
-      }
-
-      this.materialsMap = await response.json();
+      throw new Error('The helper data was not loaded.');
     }
 
-    return this.materialsMap.get(ordinal);
+    return this.materialsMap[ordinal];
   }
 
   /**
@@ -39,17 +57,12 @@ export default class Helpers {
    * @param ordinal Ordinal value for the biome.
    * @returns Name of the biome or undefined if the ordinal value is not in the biomes map.
    */
-  public static async getBiomeName(ordinal: number): Promise<string | undefined> {
+  public static getBiomeName(ordinal: number): string | undefined {
     if (!this.biomesMap) {
-      const response = await fetch('data/biomes.json');
-      if (!response.ok) {
-        throw new Error('Unable to retrieve biomes map.');
-      }
-
-      this.biomesMap = await response.json();
+      throw new Error('The helper data was not loaded.');
     }
 
-    return this.materialsMap.get(ordinal);
+    return this.biomesMap[ordinal];
   }
 
   /**
