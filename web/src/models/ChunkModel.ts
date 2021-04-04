@@ -5,9 +5,9 @@ import BlockModel from './BlockModel';
  */
 interface ChunkModel {
   /**
-   * A map of coordinates to block models (YXZ format).
+   * A record of coordinates to block models (YXZ format).
    */
-  blocks: Map<number, Map<number, Map<number, BlockModel>>>;
+  blocks: Record<number, Record<number, Record<number, BlockModel>>>;
 }
 
 export default ChunkModel;

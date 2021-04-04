@@ -19,6 +19,13 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
+    'no-plusplus': 'off',
+    'no-continue': 'off',
+    'no-restricted-syntax': [
+      'error',
+      'LabeledStatement',
+      'WithStatement',
+    ],
     'import/extensions': [
       'error',
       'ignorePackages',
