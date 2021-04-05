@@ -151,6 +151,13 @@ export default class ServerLoader {
     }
   }
 
+  /**
+   * Loads a block and adds it to the scene.
+   * @param coordinates Local coordinates of the block.
+   * @param blockModel Data about the block.
+   * @param parent Parent transform node of the block.
+   * @param scene Scene the block belongs to.
+   */
   private loadBlock(
     coordinates: VectorXYZ, blockModel: BlockModel, parent: TransformNode, scene: Scene,
   ): void {
@@ -159,14 +166,21 @@ export default class ServerLoader {
       return;
     }
 
-    const block = this.createInstanceOfBlock(`block:${coordinates.x},${coordinates.y},${coordinates.z}`, materialName, scene);
+    const block = this.createBlockInstance(`block:${coordinates.x},${coordinates.y},${coordinates.z}`, materialName, scene);
     block.parent = parent;
     block.setPositionWithLocalVector(new Vector3(coordinates.x, coordinates.y, coordinates.z));
     block.freezeWorldMatrix();
     block.material?.freeze();
   }
 
-  private createInstanceOfBlock(name: string, materialName: string, scene: Scene): AbstractMesh {
+  /**
+   * Creates a block instance.
+   * @param name Name to assign to the block instance.
+   * @param materialName Name of material to use for block.
+   * @param scene Scene that the block belongs to.
+   * @returns The block instance.
+   */
+  private createBlockInstance(name: string, materialName: string, scene: Scene): AbstractMesh {
     if (materialName in this.blocks) {
       return this.blocks[materialName].createInstance(name);
     }
