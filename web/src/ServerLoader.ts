@@ -1,10 +1,10 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { BoxBuilder } from '@babylonjs/core/Meshes/Builders/boxBuilder';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
-import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import ServerModel from './models/ServerModel';
@@ -16,6 +16,8 @@ import VectorXYZ from './models/VectorXYZ';
 import Helpers from './Helpers';
 import Constants from './Constants';
 import '@babylonjs/core/Materials/standardMaterial';
+import '@babylonjs/core/Meshes/Builders/boxBuilder';
+import '@babylonjs/core/Meshes/instancedMesh';
 
 /**
  * Handles loading data for the server.
@@ -40,6 +42,11 @@ export default class ServerLoader {
    * Status of the server being loaded.
    */
   private loaded = false;
+
+  /**
+   * Blocks to create instances from.
+   */
+  private blocks: Record<string, Mesh> = {};
 
   /**
    * Creates a new instance of the server loader.
@@ -103,11 +110,10 @@ export default class ServerLoader {
     scene.clearColor = Color3.Black().toColor4();
 
     const spawnChunk = Helpers.getChunkCoordinates(world.spawn);
-    await ServerLoader.loadChunk(spawnChunk, world, scene);
+    await this.loadChunk(spawnChunk, world, scene);
 
     const camera = new UniversalCamera('camera', new Vector3(world.spawn.x, world.spawn.y + 10, world.spawn.z), scene);
     camera.attachControl(this.canvas, true);
-    const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
 
     return scene;
   }
@@ -118,8 +124,8 @@ export default class ServerLoader {
    * @param world World containing the chunk.
    * @param scene Scene to add the chunk to.
    */
-  private static async loadChunk(coordinates: VectorXZ, world: WorldModel, scene: Scene)
-  : Promise<void> {
+  private async loadChunk(coordinates: VectorXZ, world: WorldModel, scene: Scene)
+    : Promise<void> {
     const response = await fetch(`data/worlds/${world.name}/${coordinates.x}.${coordinates.z}.json`);
     if (!response.ok) {
       throw new Error(`Unable to load chunk data for ${world.name}:${coordinates.x},${coordinates.z}.`);
@@ -133,33 +139,43 @@ export default class ServerLoader {
       ),
     );
 
-    const loadBlockPromises = [];
-
     for (const [y, yMap] of Object.entries(chunkModel.blocks)) {
       for (const [x, xMap] of Object.entries(yMap)) {
         for (const [z, blockModel] of Object.entries(xMap)) {
-          loadBlockPromises.push(ServerLoader.loadBlock(
+          this.loadBlock(
             { x: parseInt(x, 10), y: parseInt(y, 10), z: parseInt(z, 10) },
             blockModel, transform, scene,
-          ));
+          );
         }
       }
     }
-
-    await Promise.all(loadBlockPromises);
   }
 
-  private static loadBlock(
-    coordinates: VectorXYZ, block: BlockModel, parent: TransformNode, scene: Scene,
+  private loadBlock(
+    coordinates: VectorXYZ, blockModel: BlockModel, parent: TransformNode, scene: Scene,
   ): void {
-    const materialName = Helpers.getMaterialName(block.material);
-    if (materialName === 'minecraft:air' || materialName === 'minecraft:cave_air' || materialName === 'minecraft:void_air') {
+    const materialName = Helpers.getMaterialName(blockModel.material);
+    if (!materialName || materialName === 'minecraft:air' || materialName === 'minecraft:cave_air' || materialName === 'minecraft:void_air') {
       return;
     }
 
-    const box = BoxBuilder.CreateBox(`block:${coordinates.x},${coordinates.y},${coordinates.z}`, {}, scene);
-    box.parent = parent;
-    box.setPositionWithLocalVector(new Vector3(coordinates.x, coordinates.y, coordinates.z));
-    // box.material = new BackgroundMaterial('bg-material', scene);
+    const block = this.createInstanceOfBlock(`block:${coordinates.x},${coordinates.y},${coordinates.z}`, materialName, scene);
+    block.parent = parent;
+    block.setPositionWithLocalVector(new Vector3(coordinates.x, coordinates.y, coordinates.z));
+    block.freezeWorldMatrix();
+    block.material?.freeze();
+  }
+
+  private createInstanceOfBlock(name: string, materialName: string, scene: Scene): AbstractMesh {
+    if (materialName in this.blocks) {
+      return this.blocks[materialName].createInstance(name);
+    }
+
+    this.blocks[materialName] = Mesh.CreateBox(`block:${materialName}`, 1, scene);
+    this.blocks[materialName].isVisible = false;
+    this.blocks[materialName].convertToUnIndexedMesh();
+    this.blocks[materialName].material = new BackgroundMaterial(materialName, scene);
+
+    return this.blocks[materialName].createInstance(name);
   }
 }
