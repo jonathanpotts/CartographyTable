@@ -36,6 +36,19 @@ The web app does not require any runtimes to be installed on the web server. It 
 
 The web app files will be located in the `plugins\BlockMaps\web` directory after running the `refresh-map-data` command. The web server only needs read access to the files. The files will be updated as the map changes so therefore the folder should either be the target of a symlink or the files should be shipped to the web server on a frequent basis.
 
-## Web browser requirements
+## Supported browsers
 
-The web app should work on recent releases of [Chrome](https://www.google.com/chrome/), [Safari](https://www.apple.com/safari/), [Firefox](https://www.mozilla.org/firefox/browsers/), [Edge](https://www.microsoft.com/edge/), and [Opera](https://www.opera.com/) (except Opera Mini) on both desktop and mobile.
+Desktop and mobile browsers are supported.
+
+| Browser | Supported Versions | Notes |
+| :-: | :-: | :-: |
+| [Google Chrome](https://www.google.com/chrome/) | Latest |
+| [Apple Safari](https://www.apple.com/safari/) | Latest | Supported on macOS, iOS, and iPadOS |
+| [Microsoft Edge](https://www.microsoft.com/edge/) | Latest | Microsoft Edge Legacy not supported |
+| [Mozilla Firefox](https://www.mozilla.org/firefox/browsers/) | Latest [Rapid Release and ESR](https://support.mozilla.org/kb/choosing-firefox-update-channel) |
+| [Opera](https://www.opera.com/) | Latest | Opera Mini not supported |
+
+**Microsoft Internet Explorer is not supported. Beta, dev, canary, and nightly releases are not supported.**
+
+Browers not on this list may work but are not supported.
+
