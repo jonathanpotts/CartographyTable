@@ -38,17 +38,21 @@ The web app files will be located in the `plugins\BlockMaps\web` directory after
 
 #### Performance Recommendations
 
-It is recommended to configure your web server to use gzip compression for at least the following MIME types:
+It is recommended to configure your web server to use gzip compression for at least the following file types:
 
-* text/html
-* text/css
-* text/javascript
-* application/json
+| Extension | MIME Type |
+| :-: | :-: |
+| .html | text/html |
+| .css | text/css |
+| .js | text/javascript |
+| .json | application/json |
+| .txt | text/plain |
 
-However, you should not use gzip compression for the following MIME type:
+However, you should not use gzip compression for the following file type:
 
-* image/png
-
+| Extension | MIME Type |
+| :-: | :-: |
+| .png | image/png |
 
 ## Supported Browsers
 
