@@ -38,8 +38,6 @@ The web app files will be located in the `plugins\BlockMaps\web` directory after
 
 ## Supported browsers
 
-Desktop and mobile browsers are supported.
-
 | Browser | Supported Versions | Notes |
 | :-: | :-: | :-: |
 | [Google Chrome](https://www.google.com/chrome/) | Latest |
@@ -48,7 +46,4 @@ Desktop and mobile browsers are supported.
 | [Mozilla Firefox](https://www.mozilla.org/firefox/browsers/) | Latest [Rapid Release and ESR](https://support.mozilla.org/kb/choosing-firefox-update-channel) |
 | [Opera](https://www.opera.com/) | Latest | Opera Mini not supported |
 
-**Microsoft Internet Explorer is not supported. Beta, dev, canary, and nightly releases are not supported.**
-
-Browers not on this list may work but are not supported.
-
+Browers on this list are supported on both desktop and mobile unless otherwise noted. Browers not on this list may work but are not supported. **Microsoft Internet Explorer is not supported. Beta, dev, canary, and nightly releases are not supported.**
