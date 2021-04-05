@@ -3,7 +3,9 @@ import { Scene } from '@babylonjs/core/scene';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -15,6 +17,7 @@ import VectorXZ from './models/VectorXZ';
 import VectorXYZ from './models/VectorXYZ';
 import Helpers from './Helpers';
 import Constants from './Constants';
+import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Materials/standardMaterial';
 import '@babylonjs/core/Meshes/Builders/boxBuilder';
 import '@babylonjs/core/Meshes/instancedMesh';
@@ -71,6 +74,8 @@ export default class ServerLoader {
 
     this.loaded = true;
 
+    this.engine.displayLoadingUI();
+
     await Helpers.load();
 
     const response = await fetch('data/server.json');
@@ -93,12 +98,16 @@ export default class ServerLoader {
    * @param world World to change to.
    */
   private async changeWorld(world: WorldModel): Promise<void> {
+    this.engine.stopRenderLoop();
+    this.engine.displayLoadingUI();
+
     const scene = await this.loadWorld(world);
 
-    this.engine.stopRenderLoop();
     this.engine.runRenderLoop(() => {
       scene.render();
     });
+
+    this.engine.hideLoadingUI();
   }
 
   /**
@@ -113,6 +122,11 @@ export default class ServerLoader {
     await this.loadChunk(spawnChunk, world, scene);
 
     const camera = new UniversalCamera('camera', new Vector3(world.spawn.x, world.spawn.y + 10, world.spawn.z), scene);
+    camera.setTarget(new Vector3(world.spawn.x, world.spawn.y, world.spawn.z));
+    camera.keysUp.push('W'.charCodeAt(0));
+    camera.keysLeft.push('A'.charCodeAt(0));
+    camera.keysDown.push('S'.charCodeAt(0));
+    camera.keysRight.push('D'.charCodeAt(0));
     camera.attachControl(this.canvas, true);
 
     return scene;
@@ -185,10 +199,14 @@ export default class ServerLoader {
       return this.blocks[materialName].createInstance(name);
     }
 
-    this.blocks[materialName] = Mesh.CreateBox(`block:${materialName}`, 1, scene);
+    this.blocks[materialName] = MeshBuilder.CreateBox(`block:${materialName}`, { wrap: true }, scene);
     this.blocks[materialName].isVisible = false;
     this.blocks[materialName].convertToUnIndexedMesh();
-    this.blocks[materialName].material = new BackgroundMaterial(materialName, scene);
+
+    const materialFileName = materialName.split(':').pop();
+    const material = new BackgroundMaterial(materialName, scene);
+    material.diffuseTexture = new Texture(`data/textures/block/${materialFileName}.png`, scene, true, true, Texture.NEAREST_NEAREST);
+    this.blocks[materialName].material = material;
 
     return this.blocks[materialName].createInstance(name);
   }
