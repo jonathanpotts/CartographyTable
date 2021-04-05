@@ -48,7 +48,7 @@ It is recommended to configure your web server to use gzip compression for at le
 | .json | application/json |
 | .txt | text/plain |
 
-However, you should not use gzip compression for the following file type:
+However, you should **NOT** use gzip compression for the following file type:
 
 | Extension | MIME Type |
 | :-: | :-: |
