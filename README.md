@@ -46,7 +46,6 @@ It is recommended to configure your web server to use gzip compression for at le
 | .css | text/css |
 | .js | text/javascript |
 | .json | application/json |
-| .bmc | application/octet-stream |
 | .txt | text/plain |
 
 However, you should **NOT** use gzip compression for the following file type:

@@ -11,6 +11,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import ServerModel from './models/ServerModel';
 import WorldModel from './models/WorldModel';
+import ChunkModel from './models/ChunkModel';
 import BlockModel from './models/BlockModel';
 import VectorXZ from './models/VectorXZ';
 import VectorXYZ from './models/VectorXYZ';
@@ -144,7 +145,7 @@ export default class ServerLoader {
       throw new Error(`Unable to load chunk data for ${world.name}:${coordinates.x},${coordinates.z}.`);
     }
 
-    const chunkBlocks: Record<number, BlockModel> = await response.json();
+    const chunkModel: ChunkModel = await response.json();
     const transform = new TransformNode(`chunk:${coordinates.x},${coordinates.z}`, scene);
     transform.setPositionWithLocalVector(
       new Vector3(
@@ -152,9 +153,15 @@ export default class ServerLoader {
       ),
     );
 
-    for (const [flatCoordinates, blockModel] of Object.entries(chunkBlocks)) {
-      const blockCoordinates = Helpers.coordinatesFromFlat(parseInt(flatCoordinates, 10));
-      this.loadBlock(blockCoordinates, blockModel, transform, scene);
+    for (const [y, yMap] of Object.entries(chunkModel.blocks)) {
+      for (const [x, xMap] of Object.entries(yMap)) {
+        for (const [z, blockModel] of Object.entries(xMap)) {
+          this.loadBlock(
+            { x: parseInt(x, 10), y: parseInt(y, 10), z: parseInt(z, 10) },
+            blockModel, transform, scene,
+          );
+        }
+      }
     }
   }
 
@@ -168,7 +175,7 @@ export default class ServerLoader {
   private loadBlock(
     coordinates: VectorXYZ, blockModel: BlockModel, parent: TransformNode, scene: Scene,
   ): void {
-    const materialName = Helpers.getMaterialName(blockModel.m);
+    const materialName = Helpers.getMaterialName(blockModel.material);
     if (!materialName || materialName === 'minecraft:air' || materialName === 'minecraft:cave_air' || materialName === 'minecraft:void_air') {
       return;
     }

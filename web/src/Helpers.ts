@@ -76,28 +76,4 @@ export default class Helpers {
 
     return { x, z };
   }
-
-  /**
-   * Converts the flat number representation of the coordinates into X, Y, and Z coordinates.
-   * @param flatCoordinates Flat number representation of the coordinates.
-   * @returns X, Y, and Z coordinates.
-   */
-  public static coordinatesFromFlat(flatCoordinates: number): VectorXYZ {
-    const y = Math.floor(flatCoordinates / (Constants.WIDTH_OF_CHUNK * Constants.DEPTH_OF_CHUNK));
-    const remainder = y % (Constants.WIDTH_OF_CHUNK * Constants.DEPTH_OF_CHUNK);
-    const x = Math.floor(remainder / Constants.WIDTH_OF_CHUNK);
-    const z = remainder % Constants.WIDTH_OF_CHUNK;
-
-    return { x, y, z };
-  }
-
-  /**
-   * Converts X, Y, and Z coordinates into the flat number representation of the coordinates.
-   * @param coordinates X, Y, and Z coordinates.
-   * @returns Flat number representation of the coordinates.
-   */
-  public static coordinatesToFlat(coordinates: VectorXYZ): number {
-    return (coordinates.y * (Constants.WIDTH_OF_CHUNK * Constants.DEPTH_OF_CHUNK))
-      + (coordinates.x * Constants.WIDTH_OF_CHUNK + coordinates.z);
-  }
 }

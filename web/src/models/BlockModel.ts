@@ -5,37 +5,37 @@ interface BlockModel {
   /**
    * Material ID ordinal.
    */
-  m: number;
+  material: number;
 
   /**
    * Additional block data.
    */
-  d: string;
+  data: string;
 
   /**
    * Sky light value.
    */
-  s: number;
+  skyLight: number;
 
   /**
    * Emitted light value.
    */
-  e: number;
+  emittedLight: number;
 
   /**
    * Temperature of the biome the block is in.
    */
-  t: number;
+  temperature: number;
 
   /**
    * Humidity of the biome the block is in.
    */
-  h: number;
+  humidity: number;
 
   /**
    * Biome the block is in.
    */
-  b: number;
+  biome: number;
 }
 
 export default BlockModel;
