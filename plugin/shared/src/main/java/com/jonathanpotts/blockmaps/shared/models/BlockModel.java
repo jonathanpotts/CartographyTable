@@ -25,16 +25,6 @@ public class BlockModel {
   public Integer emittedLight;
 
   /**
-   * Temperature of the biome the block is in.
-   */
-  public Double temperature;
-
-  /**
-   * Humidity of the biome the block is in.
-   */
-  public Double humidity;
-
-  /**
    * Biome the block is in.
    */
   public Integer biome;

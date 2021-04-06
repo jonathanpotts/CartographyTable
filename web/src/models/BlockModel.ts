@@ -23,16 +23,6 @@ interface BlockModel {
   emittedLight: number;
 
   /**
-   * Temperature of the biome the block is in.
-   */
-  temperature: number;
-
-  /**
-   * Humidity of the biome the block is in.
-   */
-  humidity: number;
-
-  /**
    * Biome the block is in.
    */
   biome: number;

@@ -57,6 +57,11 @@ public class CommandRefreshMapData implements CommandExecutor {
   private boolean isExecuting = false;
 
   /**
+   * Collection of materials that are tinted.
+   */
+  Set<Material> tintedMaterials;
+
+  /**
    * Creates an instance of the command executor.
    *
    * @param plugin The server plugin associated to this command.
@@ -68,6 +73,21 @@ public class CommandRefreshMapData implements CommandExecutor {
     pluginDataPath = plugin.getDataFolder().toPath();
     Path webPath = pluginDataPath.resolve("web");
     webDataPath = webPath.resolve("data");
+    
+    tintedMaterials = new HashSet<Material>();
+    tintedMaterials.add(Material.GRASS_BLOCK);
+    tintedMaterials.add(Material.GRASS);
+    tintedMaterials.add(Material.TALL_GRASS);
+    tintedMaterials.add(Material.FERN);
+    tintedMaterials.add(Material.LARGE_FERN);
+    tintedMaterials.add(Material.POTTED_FERN);
+    tintedMaterials.add(Material.SUGAR_CANE);
+    tintedMaterials.add(Material.OAK_LEAVES);
+    tintedMaterials.add(Material.DARK_OAK_LEAVES);
+    tintedMaterials.add(Material.JUNGLE_LEAVES);
+    tintedMaterials.add(Material.ACACIA_LEAVES);
+    tintedMaterials.add(Material.VINE);
+    tintedMaterials.add(Material.WATER);
   }
 
   @Override
@@ -404,14 +424,14 @@ public class CommandRefreshMapData implements CommandExecutor {
    */
   private void processChunk(World world, VectorXZ coordinates)
       throws InterruptedException, ExecutionException, IOException {
-    ChunkModel chunkModel = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+      Map<Integer, Map<Integer, Map<Integer, BlockModel>>> chunkBlocks = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
       if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
         return null;
       }
 
       Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
-      ChunkModel model = new ChunkModel();
+      Map<Integer, Map<Integer, Map<Integer, BlockModel>>> blocks = null;
 
       for (int y = 0; y < world.getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
@@ -422,26 +442,26 @@ public class CommandRefreshMapData implements CommandExecutor {
               continue;
             }
 
-            if (model.blocks == null) {
-              model.blocks = new HashMap<>();
+            if (blocks == null) {
+              blocks = new HashMap<>();
             }
 
-            model.blocks.computeIfAbsent(y, k -> new HashMap<>());
-            model.blocks.get(y).computeIfAbsent(x, k -> new HashMap<>());
+            blocks.computeIfAbsent(y, k -> new HashMap<>());
+            blocks.get(y).computeIfAbsent(x, k -> new HashMap<>());
 
-            model.blocks.get(y).get(x).put(z, blockModel);
+            blocks.get(y).get(x).put(z, blockModel);
           }
         }
       }
 
-      return model;
+      return blocks;
     }).get();
 
-    if (chunkModel == null) {
+    if (chunkBlocks == null) {
       return;
     }
 
-    String chunkJson = gson.toJson(chunkModel);
+    String chunkJson = gson.toJson(chunkBlocks);
     Path worldPath = webDataPath.resolve("worlds").resolve(world.getName());
     Files.createDirectories(worldPath);
     Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json");
@@ -520,27 +540,12 @@ public class CommandRefreshMapData implements CommandExecutor {
       blockModel.emittedLight = emittedLight;
     }
 
-    Set<Material> tintedMaterials = new HashSet<Material>();
-    tintedMaterials.add(Material.GRASS_BLOCK);
-    tintedMaterials.add(Material.GRASS);
-    tintedMaterials.add(Material.TALL_GRASS);
-    tintedMaterials.add(Material.FERN);
-    tintedMaterials.add(Material.LARGE_FERN);
-    tintedMaterials.add(Material.POTTED_FERN);
-    tintedMaterials.add(Material.SUGAR_CANE);
-    tintedMaterials.add(Material.OAK_LEAVES);
-    tintedMaterials.add(Material.DARK_OAK_LEAVES);
-    tintedMaterials.add(Material.JUNGLE_LEAVES);
-    tintedMaterials.add(Material.ACACIA_LEAVES);
-    tintedMaterials.add(Material.VINE);
-
     if (tintedMaterials.contains(blockData.getMaterial())) {
-      blockModel.temperature = world.getTemperature(x, y, z);
-      blockModel.humidity = world.getHumidity(x, y, z);
+      blockModel.biome = world.getBiome(x, y, z).ordinal();
     }
 
-    if (blockData.getMaterial() == Material.WATER) {
-      blockModel.biome = world.getBiome(x, y, z).ordinal();
+    if (blockData.getMaterial().isAir() && blockModel.skyLight == null && blockModel.emittedLight == null) {
+      return null;
     }
 
     return blockModel;

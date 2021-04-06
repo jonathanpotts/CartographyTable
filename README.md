@@ -52,6 +52,7 @@ However, you should **NOT** use gzip compression for the following file type:
 
 | Extension | MIME Type |
 | :-: | :-: |
+| .gz | application/gzip |
 | .png | image/png |
 
 ## Supported Browsers

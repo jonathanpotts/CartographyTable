@@ -11,7 +11,6 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import ServerModel from './models/ServerModel';
 import WorldModel from './models/WorldModel';
-import ChunkModel from './models/ChunkModel';
 import BlockModel from './models/BlockModel';
 import VectorXZ from './models/VectorXZ';
 import VectorXYZ from './models/VectorXYZ';
@@ -145,7 +144,8 @@ export default class ServerLoader {
       throw new Error(`Unable to load chunk data for ${world.name}:${coordinates.x},${coordinates.z}.`);
     }
 
-    const chunkModel: ChunkModel = await response.json();
+    const chunkBlocks:
+      Record<number, Record<number, Record<number, BlockModel>>> = await response.json();
     const transform = new TransformNode(`chunk:${coordinates.x},${coordinates.z}`, scene);
     transform.setPositionWithLocalVector(
       new Vector3(
@@ -153,7 +153,7 @@ export default class ServerLoader {
       ),
     );
 
-    for (const [y, yMap] of Object.entries(chunkModel.blocks)) {
+    for (const [y, yMap] of Object.entries(chunkBlocks)) {
       for (const [x, xMap] of Object.entries(yMap)) {
         for (const [z, blockModel] of Object.entries(xMap)) {
           this.loadBlock(
