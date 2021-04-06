@@ -21,6 +21,8 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -57,6 +59,11 @@ public class CommandRefreshMapData implements CommandExecutor {
   private boolean isExecuting = false;
 
   /**
+   * Materials that are tinted.
+   */
+  Set<Material> tintedMaterials;
+
+  /**
    * Creates an instance of the command executor.
    *
    * @param plugin The server plugin associated to this command.
@@ -68,16 +75,35 @@ public class CommandRefreshMapData implements CommandExecutor {
     pluginDataPath = plugin.getDataFolder().toPath();
     Path webPath = pluginDataPath.resolve("web");
     webDataPath = webPath.resolve("data");
+
+    tintedMaterials = new HashSet<Material>();
+    tintedMaterials.add(Material.GRASS_BLOCK);
+    tintedMaterials.add(Material.GRASS);
+    tintedMaterials.add(Material.TALL_GRASS);
+    tintedMaterials.add(Material.FERN);
+    tintedMaterials.add(Material.LARGE_FERN);
+    tintedMaterials.add(Material.POTTED_FERN);
+    tintedMaterials.add(Material.SUGAR_CANE);
+    tintedMaterials.add(Material.OAK_LEAVES);
+    tintedMaterials.add(Material.DARK_OAK_LEAVES);
+    tintedMaterials.add(Material.JUNGLE_LEAVES);
+    tintedMaterials.add(Material.ACACIA_LEAVES);
+    tintedMaterials.add(Material.VINE);
+    tintedMaterials.add(Material.WATER);
   }
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (isExecuting) {
-      plugin.getLogger().info("Map data is already being refreshed");
+      plugin.getLogger().info("The map data is already being refreshed");
+      sender.sendMessage("The map data is already being refreshed");
       return true;
     }
 
     isExecuting = true;
+
+    plugin.getLogger().info("Refreshing map data");
+    sender.sendMessage("Refreshing map data");
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       try {
@@ -86,10 +112,11 @@ public class CommandRefreshMapData implements CommandExecutor {
         generateMaterialData();
         generateBiomeData();
         downloadMaterialTexturesAndModels();
-        processWorlds();
+        processWorlds(sender);
 
         plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
           plugin.getLogger().info("The map has been refreshed");
+          sender.sendMessage("The map has been refreshed");
 
           return null;
         });
@@ -97,6 +124,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
           plugin.getLogger().severe("Unable to save map data");
           e.printStackTrace();
+          sender.sendMessage("Unable to save map data");
 
           return null;
         });
@@ -110,8 +138,10 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Copies the web app into the plugin data folder.
-   * @throws URISyntaxException Thrown if there is an issue with the executable path.
-   * @throws IOException Thrown if there is an issue copying the files.
+   * 
+   * @throws URISyntaxException Thrown if there is an issue with the executable
+   *                            path.
+   * @throws IOException        Thrown if there is an issue copying the files.
    */
   private void copyWebApp() throws URISyntaxException, IOException {
     Files.createDirectories(pluginDataPath);
@@ -141,7 +171,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Generates server data and saves it.
-   *
+   * 
    * @throws IOException Thrown if there an issue when saving the data.
    */
   private void generateServerData() throws InterruptedException, ExecutionException, IOException {
@@ -180,7 +210,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Generates material data and saves it.
-   *
+   * 
    * @throws IOException Thrown if there an issue when saving the data.
    */
   private void generateMaterialData() throws InterruptedException, ExecutionException, IOException {
@@ -207,7 +237,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Generates biome data and saves it.
-   *
+   * 
    * @throws IOException Thrown if there an issue when saving the data.
    */
   private void generateBiomeData() throws InterruptedException, ExecutionException, IOException {
@@ -230,7 +260,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Downloads material textures and models.
-   *
+   * 
    * @throws IOException Thrown if there an issue while downloading textures and
    *                     models.
    */
@@ -333,21 +363,22 @@ public class CommandRefreshMapData implements CommandExecutor {
   /**
    * Processes worlds and saves data.
    */
-  private void processWorlds() throws InterruptedException, ExecutionException, IOException {
+  private void processWorlds(CommandSender sender) throws InterruptedException, ExecutionException, IOException {
     List<World> worlds = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> plugin.getServer().getWorlds())
         .get();
 
     for (World world : worlds) {
-      processWorld(world);
+      processWorld(sender, world);
     }
   }
 
   /**
    * Processes a world and saves data.
-   *
+   * 
    * @param world The world to process.
    */
-  private void processWorld(World world) throws InterruptedException, ExecutionException, IOException {
+  private void processWorld(CommandSender sender, World world)
+      throws InterruptedException, ExecutionException, IOException {
     Path worldPath = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> world.getWorldFolder().toPath())
         .get();
     Path regionPath = worldPath.resolve("region");
@@ -373,8 +404,22 @@ public class CommandRefreshMapData implements CommandExecutor {
       regionCoordinates.add(new VectorXZ(x, z));
     }
 
+    int regions = 0;
+
     for (VectorXZ coordinates : regionCoordinates) {
       processRegion(world, coordinates);
+      regions++;
+
+      int regionsProcessed = regions;
+      int chunksProcessed = regionsProcessed * Constants.WIDTH_OF_REGION * Constants.DEPTH_OF_REGION;
+
+      plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+        String message = "Region " + coordinates.x + "," + coordinates.z + " processed " + "(Total regions processed: "
+            + regionsProcessed + " Total chunks processed: " + chunksProcessed + ")";
+        plugin.getLogger().info(message);
+        sender.sendMessage(message);
+        return null;
+      });
     }
   }
 
@@ -398,59 +443,59 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Processes a chunk and saves data.
-   *
+   * 
    * @param world       World containing the chunk.
    * @param coordinates Coordinates of the chunk.
    */
   private void processChunk(World world, VectorXZ coordinates)
       throws InterruptedException, ExecutionException, IOException {
-    ChunkModel chunkModel = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
+    List<Byte> bytes = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
       if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
         return null;
       }
 
       Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
       ChunkSnapshot snapshot = chunk.getChunkSnapshot();
-      ChunkModel model = new ChunkModel();
+      Map<Integer, BlockModel> blocks = new HashMap<Integer, BlockModel>();
+
+      List<Byte> chunkBytes = new ArrayList<>();
 
       for (int y = 0; y < world.getMaxHeight(); y++) {
         for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
           for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
+            List<Byte> blockBytes = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
 
-            if (blockModel == null) {
+            if (blockBytes == null) {
               continue;
             }
 
-            if (model.blocks == null) {
-              model.blocks = new HashMap<>();
-            }
-
-            model.blocks.computeIfAbsent(y, k -> new HashMap<>());
-            model.blocks.get(y).computeIfAbsent(x, k -> new HashMap<>());
-
-            model.blocks.get(y).get(x).put(z, blockModel);
+            chunkBytes.addAll(blockBytes);
           }
         }
       }
 
-      return model;
+      return chunkBytes;
     }).get();
 
-    if (chunkModel == null) {
+    if (bytes == null || bytes.isEmpty()) {
       return;
     }
 
-    String chunkJson = gson.toJson(chunkModel);
+    byte[] chunkBytes = new byte[bytes.size()];
+
+    for (int i = 0; i < bytes.size(); i++) {
+      chunkBytes[i] = bytes.get(i).byteValue();
+    }
+
     Path worldPath = webDataPath.resolve("worlds").resolve(world.getName());
     Files.createDirectories(worldPath);
-    Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json");
-    Files.write(chunkPath, chunkJson.getBytes());
+    Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".bmc");
+    Files.write(chunkPath, chunkBytes);
   }
 
   /**
    * Processes a block.
-   *
+   * 
    * @param minHeight     Minimum height of the world.
    * @param maxHeight     Maximum height of the world.
    * @param chunkSnapshot Snapshot of the chunk containing the block.
@@ -460,7 +505,7 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @param z             Z coordinate of the block in the chunk.
    * @return The processes block data.
    */
-  private BlockModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
+  private List<Byte> processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
       int z) {
     BlockData blockData = chunkSnapshot.getBlockData(x, y, z);
 
@@ -492,8 +537,23 @@ public class CommandRefreshMapData implements CommandExecutor {
       }
     }
 
-    BlockModel blockModel = new BlockModel();
-    blockModel.material = blockData.getMaterial().ordinal();
+    List<Byte> blockBytes = new ArrayList<>();
+
+    int coordinates = (y * (Constants.WIDTH_OF_CHUNK * Constants.DEPTH_OF_CHUNK)) + (x * Constants.WIDTH_OF_CHUNK + z);
+    byte[] coordinatesBytes = ByteBuffer.allocate(Integer.BYTES).putInt(coordinates).array();
+    blockBytes.add(coordinatesBytes[2]);
+    blockBytes.add(coordinatesBytes[3]);
+
+    byte negativeMask = 0b1;
+    byte hasDataMask = 0b1 << 1;
+    byte hasLightMask = 0b1 << 2;
+    byte hasBiomeMask = 0b1 << 3;
+
+    byte flags = 0;
+
+    if (coordinates < 0) {
+      flags |= negativeMask;
+    }
 
     String data = blockData.getAsString(true);
     int dataStartIndex = data.indexOf("[");
@@ -502,8 +562,16 @@ public class CommandRefreshMapData implements CommandExecutor {
       int dataEndIndex = data.indexOf("]", dataStartIndex);
 
       if (dataEndIndex > dataStartIndex) {
-        blockModel.data = data.substring(dataStartIndex + 1, dataEndIndex);
+        data = data.substring(dataStartIndex + 1, dataEndIndex);
+      } else {
+        data = null;
       }
+    } else {
+      data = null;
+    }
+
+    if (data != null) {
+      flags |= hasDataMask;
     }
 
     int defaultLightValue = blockData.getMaterial() == Material.AIR ? Constants.MAX_LIGHT_LEVEL
@@ -512,37 +580,66 @@ public class CommandRefreshMapData implements CommandExecutor {
     int skyLight = chunkSnapshot.getBlockSkyLight(x, y, z);
     int emittedLight = chunkSnapshot.getBlockEmittedLight(x, y, z);
 
+    Integer light = null;
+
     if (skyLight != defaultLightValue) {
-      blockModel.skyLight = skyLight;
+      if (light == null) {
+        light = 0;
+      }
+
+      light |= skyLight << 4;
     }
 
     if (emittedLight != defaultLightValue) {
-      blockModel.emittedLight = emittedLight;
+      if (light == null) {
+        light = 0;
+      }
+
+      light |= emittedLight;
     }
 
-    Set<Material> tintedMaterials = new HashSet<Material>();
-    tintedMaterials.add(Material.GRASS_BLOCK);
-    tintedMaterials.add(Material.GRASS);
-    tintedMaterials.add(Material.TALL_GRASS);
-    tintedMaterials.add(Material.FERN);
-    tintedMaterials.add(Material.LARGE_FERN);
-    tintedMaterials.add(Material.POTTED_FERN);
-    tintedMaterials.add(Material.SUGAR_CANE);
-    tintedMaterials.add(Material.OAK_LEAVES);
-    tintedMaterials.add(Material.DARK_OAK_LEAVES);
-    tintedMaterials.add(Material.JUNGLE_LEAVES);
-    tintedMaterials.add(Material.ACACIA_LEAVES);
-    tintedMaterials.add(Material.VINE);
+    if (light != null) {
+      flags |= hasLightMask;
+    }
+
+    Biome biome = null;
 
     if (tintedMaterials.contains(blockData.getMaterial())) {
-      blockModel.temperature = world.getTemperature(x, y, z);
-      blockModel.humidity = world.getHumidity(x, y, z);
+      biome = world.getBiome(x, y, z);
     }
 
-    if (blockData.getMaterial() == Material.WATER) {
-      blockModel.biome = world.getBiome(x, y, z).ordinal();
+    if (biome != null) {
+      flags |= hasBiomeMask;
     }
 
-    return blockModel;
+    if (blockData.getMaterial().isAir() && light == null) {
+      return null;
+    }
+
+    blockBytes.add(flags);
+
+    byte[] materialBytes = ByteBuffer.allocate(Integer.BYTES).putInt(blockData.getMaterial().ordinal()).array();
+    blockBytes.add(materialBytes[2]);
+    blockBytes.add(materialBytes[3]);
+
+    if (data != null) {
+      byte[] dataBytes = data.getBytes(StandardCharsets.US_ASCII);
+
+      for (Byte dataByte : dataBytes) {
+        blockBytes.add(dataByte);
+      }
+    }
+
+    if (light != null) {
+      byte[] lightBytes = ByteBuffer.allocate(Integer.BYTES).putInt(light).array();
+      blockBytes.add(lightBytes[3]);
+    }
+
+    if (biome != null) {
+      byte[] biomeBytes = ByteBuffer.allocate(Integer.BYTES).putInt(biome.ordinal()).array();
+      blockBytes.add(biomeBytes[3]);
+    }
+
+    return blockBytes;
   }
 }
