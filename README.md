@@ -2,7 +2,7 @@
 
 [![Java CI with Gradle](https://github.com/jonathanpotts/BlockMaps/actions/workflows/gradle.yml/badge.svg)](https://github.com/jonathanpotts/BlockMaps/actions/workflows/gradle.yml) [![Node.js CI](https://github.com/jonathanpotts/BlockMaps/actions/workflows/node.js.yml/badge.svg)](https://github.com/jonathanpotts/BlockMaps/actions/workflows/node.js.yml)
 
-A Minecraft server plugin for creating immersive 3D maps viewable on the web.
+A Minecraft server plugin that creates 3D maps of your server that can be viewed on the web.
 
 **NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG.**
 
@@ -47,6 +47,7 @@ It is recommended to configure your web server to use gzip compression for at le
 | .js | text/javascript |
 | .json | application/json |
 | .txt | text/plain |
+| .mcmeta | application/json |
 
 However, you should **NOT** use gzip compression for the following file type:
 
@@ -61,7 +62,7 @@ However, you should **NOT** use gzip compression for the following file type:
 | :-: | :-: | :-: |
 | [Google Chrome](https://www.google.com/chrome/) | Latest |
 | [Apple Safari](https://www.apple.com/safari/) | Latest | Supported on macOS, iOS, and iPadOS |
-| [Microsoft Edge](https://www.microsoft.com/edge/) | Latest | Microsoft Edge Legacy not supported |
+| [Microsoft Edge](https://www.microsoft.com/edge/) | Latest | [Microsoft Edge Legacy](https://support.microsoft.com/microsoft-edge/what-is-microsoft-edge-legacy-3e779e55-4c55-08e6-ecc8-2333768c0fb0) not supported |
 | [Mozilla Firefox](https://www.mozilla.org/firefox/browsers/) | Latest [Rapid Release and ESR](https://support.mozilla.org/kb/choosing-firefox-update-channel) |
 | [Opera](https://www.opera.com/) | Latest | Opera Mini not supported |
 

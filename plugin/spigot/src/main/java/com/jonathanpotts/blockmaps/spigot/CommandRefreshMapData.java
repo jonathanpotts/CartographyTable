@@ -15,16 +15,20 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Executes the "refresh-map-data" command.
@@ -73,7 +77,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     pluginDataPath = plugin.getDataFolder().toPath();
     Path webPath = pluginDataPath.resolve("web");
     webDataPath = webPath.resolve("data");
-    
+
     tintedMaterials = new HashSet<Material>();
     tintedMaterials.add(Material.GRASS_BLOCK);
     tintedMaterials.add(Material.GRASS);
@@ -130,8 +134,10 @@ public class CommandRefreshMapData implements CommandExecutor {
 
   /**
    * Copies the web app into the plugin data folder.
-   * @throws URISyntaxException Thrown if there is an issue with the executable path.
-   * @throws IOException Thrown if there is an issue copying the files.
+   * 
+   * @throws URISyntaxException Thrown if there is an issue with the executable
+   *                            path.
+   * @throws IOException        Thrown if there is an issue copying the files.
    */
   private void copyWebApp() throws URISyntaxException, IOException {
     Files.createDirectories(pluginDataPath);
@@ -188,14 +194,14 @@ public class CommandRefreshMapData implements CommandExecutor {
       return model;
     }).get();
 
-    String serverJson = gson.toJson(serverModel);
-
     Files.createDirectories(webDataPath);
-    Path licensePath = webDataPath.resolve("LICENSE.txt");
-    Files.write(licensePath, Constants.MINECRAFT_LICENSE_NOTICE.getBytes());
 
+    Path licensePath = webDataPath.resolve("LICENSE.txt");
+    Files.write(licensePath, Constants.MINECRAFT_LICENSE_NOTICE.getBytes(StandardCharsets.UTF_8));
+
+    String serverJson = gson.toJson(serverModel);
     Path serverPath = webDataPath.resolve("server.json");
-    Files.write(serverPath, serverJson.getBytes());
+    Files.write(serverPath, serverJson.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -218,11 +224,11 @@ public class CommandRefreshMapData implements CommandExecutor {
       return map;
     }).get();
 
-    String materialsJson = gson.toJson(materials);
-
     Files.createDirectories(webDataPath);
+
+    String materialsJson = gson.toJson(materials);
     Path materialsPath = webDataPath.resolve("materials.json");
-    Files.write(materialsPath, materialsJson.getBytes());
+    Files.write(materialsPath, materialsJson.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -241,11 +247,11 @@ public class CommandRefreshMapData implements CommandExecutor {
       return map;
     }).get();
 
-    String biomesJson = gson.toJson(biomes);
-
     Files.createDirectories(webDataPath);
+
+    String biomesJson = gson.toJson(biomes);
     Path biomesPath = webDataPath.resolve("biomes.json");
-    Files.write(biomesPath, biomesJson.getBytes());
+    Files.write(biomesPath, biomesJson.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -424,38 +430,39 @@ public class CommandRefreshMapData implements CommandExecutor {
    */
   private void processChunk(World world, VectorXZ coordinates)
       throws InterruptedException, ExecutionException, IOException {
-      Map<Integer, Map<Integer, Map<Integer, BlockModel>>> chunkBlocks = plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-      if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
-        return null;
-      }
-
-      Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
-      ChunkSnapshot snapshot = chunk.getChunkSnapshot();
-      Map<Integer, Map<Integer, Map<Integer, BlockModel>>> blocks = null;
-
-      for (int y = 0; y < world.getMaxHeight(); y++) {
-        for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
-          for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-            BlockModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
-
-            if (blockModel == null) {
-              continue;
-            }
-
-            if (blocks == null) {
-              blocks = new HashMap<>();
-            }
-
-            blocks.computeIfAbsent(y, k -> new HashMap<>());
-            blocks.get(y).computeIfAbsent(x, k -> new HashMap<>());
-
-            blocks.get(y).get(x).put(z, blockModel);
+    Map<Integer, Map<Integer, Map<Integer, BlockModel>>> chunkBlocks = plugin.getServer().getScheduler()
+        .callSyncMethod(plugin, () -> {
+          if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
+            return null;
           }
-        }
-      }
 
-      return blocks;
-    }).get();
+          Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
+          ChunkSnapshot snapshot = chunk.getChunkSnapshot();
+          Map<Integer, Map<Integer, Map<Integer, BlockModel>>> blocks = null;
+
+          for (int y = 0; y < world.getMaxHeight(); y++) {
+            for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
+              for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
+                BlockModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
+
+                if (blockModel == null) {
+                  continue;
+                }
+
+                if (blocks == null) {
+                  blocks = new HashMap<>();
+                }
+
+                blocks.computeIfAbsent(y, k -> new HashMap<>());
+                blocks.get(y).computeIfAbsent(x, k -> new HashMap<>());
+
+                blocks.get(y).get(x).put(z, blockModel);
+              }
+            }
+          }
+
+          return blocks;
+        }).get();
 
     if (chunkBlocks == null) {
       return;
@@ -463,9 +470,8 @@ public class CommandRefreshMapData implements CommandExecutor {
 
     String chunkJson = gson.toJson(chunkBlocks);
     Path worldPath = webDataPath.resolve("worlds").resolve(world.getName());
-    Files.createDirectories(worldPath);
-    Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json");
-    Files.write(chunkPath, chunkJson.getBytes());
+    Path chunkPath = worldPath.resolve(coordinates.x + "." + coordinates.z + ".json.gz");
+    writeStringToGzipFile(chunkJson, chunkPath);
   }
 
   /**
@@ -549,5 +555,27 @@ public class CommandRefreshMapData implements CommandExecutor {
     }
 
     return blockModel;
+  }
+
+  /**
+   * Writes a string to a GZIP-compressed file.
+   * 
+   * @param string   String to write.
+   * @param filePath Path to write to.
+   * @throws IOException Thrown if there is an issue while writing the file.
+   */
+  private void writeStringToGzipFile(String string, Path filePath) throws IOException {
+    byte[] bytes;
+
+    try (ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
+        GZIPOutputStream gzipOS = new GZIPOutputStream(byteArrayOS);
+        OutputStreamWriter osWriter = new OutputStreamWriter(gzipOS, StandardCharsets.UTF_8);) {
+      osWriter.write(string);
+      osWriter.close();
+      bytes = byteArrayOS.toByteArray();
+    }
+
+    Files.createDirectories(filePath.getParent());
+    Files.write(filePath, bytes);
   }
 }

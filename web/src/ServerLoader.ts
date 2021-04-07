@@ -61,6 +61,8 @@ export default class ServerLoader {
     window.addEventListener('resize', () => {
       this.engine.resize();
     });
+
+    this.engine.displayLoadingUI();
   }
 
   /**
@@ -72,8 +74,6 @@ export default class ServerLoader {
     }
 
     this.loaded = true;
-
-    this.engine.displayLoadingUI();
 
     await Helpers.load();
 
@@ -97,8 +97,9 @@ export default class ServerLoader {
    * @param world World to change to.
    */
   private async changeWorld(world: WorldModel): Promise<void> {
-    this.engine.stopRenderLoop();
     this.engine.displayLoadingUI();
+
+    this.engine.stopRenderLoop();
 
     const scene = await this.loadWorld(world);
 
