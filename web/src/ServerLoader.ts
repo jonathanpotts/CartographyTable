@@ -20,6 +20,7 @@ import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Materials/standardMaterial';
 import '@babylonjs/core/Meshes/Builders/boxBuilder';
 import '@babylonjs/core/Meshes/instancedMesh';
+import { ungzip } from 'pako';
 
 /**
  * Handles loading data for the server.
@@ -140,13 +141,16 @@ export default class ServerLoader {
    */
   private async loadChunk(coordinates: VectorXZ, world: WorldModel, scene: Scene)
     : Promise<void> {
-    const response = await fetch(`data/worlds/${world.name}/${coordinates.x}.${coordinates.z}.json`);
+    const response = await fetch(`data/worlds/${world.name}/${coordinates.x}.${coordinates.z}.json.gz`);
     if (!response.ok) {
       throw new Error(`Unable to load chunk data for ${world.name}:${coordinates.x},${coordinates.z}.`);
     }
 
+    const responseBody = new Uint8Array(await response.arrayBuffer());
+    const responseJson = ungzip(responseBody, { to: 'string' });
     const chunkBlocks:
-      Record<number, Record<number, Record<number, BlockModel>>> = await response.json();
+      Record<number, Record<number, Record<number, BlockModel>>> = JSON.parse(responseJson);
+
     const transform = new TransformNode(`chunk:${coordinates.x},${coordinates.z}`, scene);
     transform.setPositionWithLocalVector(
       new Vector3(
