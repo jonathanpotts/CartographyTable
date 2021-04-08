@@ -9,6 +9,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { ungzip } from 'pako';
 import ServerModel from './models/ServerModel';
 import WorldModel from './models/WorldModel';
 import BlockModel from './models/BlockModel';
@@ -20,7 +21,6 @@ import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Materials/standardMaterial';
 import '@babylonjs/core/Meshes/Builders/boxBuilder';
 import '@babylonjs/core/Meshes/instancedMesh';
-import { ungzip } from 'pako';
 
 /**
  * Handles loading data for the server.
@@ -57,7 +57,7 @@ export default class ServerLoader {
    */
   public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.engine = new Engine(canvas, true, 
+    this.engine = new Engine(canvas, true,
       { audioEngine: false, autoEnableWebVR: false, xrCompatible: false });
 
     window.addEventListener('resize', () => {
