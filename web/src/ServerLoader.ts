@@ -57,7 +57,8 @@ export default class ServerLoader {
    */
   public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.engine = new Engine(canvas, true);
+    this.engine = new Engine(canvas, true, 
+      { audioEngine: false, autoEnableWebVR: false, xrCompatible: false });
 
     window.addEventListener('resize', () => {
       this.engine.resize();
