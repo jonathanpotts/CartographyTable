@@ -334,6 +334,24 @@ public class CommandRefreshMapData implements CommandExecutor {
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
 
+      Path blockStatesPath = webDataPath.resolve("blockstates");
+
+      Files.createDirectories(blockStatesPath);
+
+      Path zipBlockStatesPath = fs.getRootDirectories().iterator().next().resolve("assets").resolve("minecraft")
+          .resolve("blockstates");
+
+      for (Path source : Files.walk(zipBlockStatesPath).collect(Collectors.toSet())) {
+        Path relativePath = zipBlockStatesPath.relativize(source);
+        Path destination = blockStatesPath.resolve(relativePath.toString());
+        if (Files.isDirectory(destination)) {
+          continue;
+        }
+
+        Files.createDirectories(destination.getParent());
+        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+      }
+
       Path modelsPath = webDataPath.resolve("models").resolve("block");
 
       Files.createDirectories(modelsPath);
@@ -521,7 +539,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     BlockModel blockModel = new BlockModel();
     blockModel.material = blockData.getMaterial().ordinal();
 
-    String data = blockData.getAsString(true);
+    String data = blockData.getAsString();
     int dataStartIndex = data.indexOf("[");
 
     if (dataStartIndex > 0) {

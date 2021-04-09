@@ -12,7 +12,7 @@ import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { ungzip } from 'pako';
 import ServerModel from './models/ServerModel';
 import WorldModel from './models/WorldModel';
-import BlockModel from './models/BlockModel';
+import BlockDataModel from './models/BlockDataModel';
 import VectorXZ from './models/VectorXZ';
 import VectorXYZ from './models/VectorXYZ';
 import Helpers from './Helpers';
@@ -150,7 +150,7 @@ export default class ServerLoader {
     const responseBody = new Uint8Array(await response.arrayBuffer());
     const responseJson = ungzip(responseBody, { to: 'string' });
     const chunkBlocks:
-      Record<number, Record<number, Record<number, BlockModel>>> = JSON.parse(responseJson);
+      Record<number, Record<number, Record<number, BlockDataModel>>> = JSON.parse(responseJson);
 
     const transform = new TransformNode(`chunk:${coordinates.x},${coordinates.z}`, scene);
     transform.setPositionWithLocalVector(
@@ -179,7 +179,7 @@ export default class ServerLoader {
    * @param scene Scene the block belongs to.
    */
   private loadBlock(
-    coordinates: VectorXYZ, blockModel: BlockModel, parent: TransformNode, scene: Scene,
+    coordinates: VectorXYZ, blockModel: BlockDataModel, parent: TransformNode, scene: Scene,
   ): void {
     const materialName = Helpers.getMaterialName(blockModel.material);
     if (!materialName || materialName === 'minecraft:air' || materialName === 'minecraft:cave_air' || materialName === 'minecraft:void_air') {
