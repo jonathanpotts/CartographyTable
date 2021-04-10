@@ -21,4 +21,39 @@ export default class Constants {
    * The maximum value for a stored lighting level.
    */
   static readonly MAX_LIGHT_LEVEL: number = 15;
+
+  /**
+   * Box faces.
+   */
+  static readonly FACES: Record<string, number> = {
+    /**
+     * North (+Z) face.
+     */
+    north: 0,
+
+    /**
+     * South (-Z) face.
+     */
+    south: 1,
+
+    /**
+     * East (+X) face.
+     */
+    east: 2,
+
+    /**
+     * West (-X) face.
+     */
+    west: 3,
+
+    /**
+     * Up (+Y) face.
+     */
+    up: 4,
+
+    /**
+     * Down (-Y) face.
+     */
+    down: 5,
+  };
 }

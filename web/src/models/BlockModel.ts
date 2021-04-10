@@ -101,7 +101,7 @@ interface BlockModel {
   /**
    * Textures to use for the block.
    */
-  textures: Record<string, string>;
+  textures?: Record<string, string>;
 
   /**
    * Elements of the block. Overrides data from the parent model if provided.
