@@ -21,6 +21,7 @@ module.exports = {
   rules: {
     'no-plusplus': 'off',
     'no-continue': 'off',
+    'no-await-in-loop': 'off',
     'no-restricted-syntax': [
       'error',
       'LabeledStatement',

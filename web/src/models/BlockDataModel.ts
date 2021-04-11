@@ -10,22 +10,22 @@ interface BlockDataModel {
   /**
    * Additional block data.
    */
-  data: string;
+  data?: string;
 
   /**
    * Sky light value.
    */
-  skyLight: number;
+  skyLight?: number;
 
   /**
    * Emitted light value.
    */
-  emittedLight: number;
+  emittedLight?: number;
 
   /**
    * Biome the block is in.
    */
-  biome: number;
+  biome?: number;
 }
 
 export default BlockDataModel;
