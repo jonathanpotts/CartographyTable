@@ -22,6 +22,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-continue': 'off',
     'no-await-in-loop': 'off',
+    'class-methods-use-this': 'off',
     'no-restricted-syntax': [
       'error',
       'LabeledStatement',

@@ -58,22 +58,35 @@ export default class BlockStateLoader {
     }
 
     if (blockState.variants) {
-      const variants = await this.loadVariantsAsync(blockState, tags);
+      const variant = await this.loadVariantAsync(blockState, tags);
     }
 
     return null;
   }
 
   /**
-   * Loads block state variants.
-   * @param blockState Block state containing the variants.
-   * @param tags Data tags to use to load the variants.
-   * @returns A promise for the loaded block state variants.
+   * Loads block state variant.
+   * @param blockState Block state containing the variant.
+   * @param tags Data tags to use to load the variant.
+   * @returns A promise for the loaded block state variant.
    */
-  private async loadVariantsAsync(
+  private async loadVariantAsync(
     blockState: BlockState,
     tags: string[],
-  ) : Promise<TransformNode | null> {
+  ): Promise<TransformNode[] | null> {
+    if (!blockState.variants) {
+      return null;
+    }
+
+    const { variants } = blockState;
+    const tag = tags.find((value) => Object.keys(variants).includes(value));
+    if (tag === undefined || tag === null || !(tag in variants)) {
+      return null;
+    }
+
+    const match = variants[tag];
+    const stateModels = Array.isArray(match) ? match : [match];
+
     return null;
   }
 }
