@@ -18,7 +18,7 @@ export interface BlockModelRotation {
   angle: number,
 
   /**
-   * Determines if the faces should be scaled around the whole block.
+   * Determines if the faces should be scaled across the whole block.
    */
   rescale?: boolean
 }
