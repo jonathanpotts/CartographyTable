@@ -1,3 +1,5 @@
+import { BackgroundMaterial, PlaneBuilder, Texture } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Scene } from '@babylonjs/core/scene';
@@ -43,12 +45,16 @@ export default class BlockStateLoader {
   ): Promise<TransformNode> {
     const blockStateName = blockData ? `${materialName}[${blockData}]` : materialName;
 
-    if (blockStateName in this.blockStates) {
+    const createClone = (): TransformNode => {
       const clone = this.blockStates[blockStateName][0].model.clone(blockStateName, null);
       if (!clone) {
         throw new Error('Unable to create a clone');
       }
       return clone;
+    };
+
+    if (blockStateName in this.blockStates) {
+      return createClone();
     }
 
     const blockStateFile = materialName.split(':').pop();
@@ -64,10 +70,12 @@ export default class BlockStateLoader {
     }
 
     if (blockState.variants) {
-      const variant = await this.loadVariantAsync(blockState, tags);
+      this.blockStates[blockStateName] = await this.loadVariantAsync(blockState, tags);
+    } else if (blockState.multipart) {
+      this.blockStates[blockStateName] = await this.loadMultipartAsync(blockState, tags);
     }
 
-    return new TransformNode('test');
+    return createClone();
   }
 
   /**
@@ -97,8 +105,7 @@ export default class BlockStateLoader {
 
     for (const stateModel of stateModels) {
       const model = await this.loadModelAsync(stateModel.model);
-
-      models.push({ weight: stateModel.weight ?? 1, model: new TransformNode('model') });
+      models.push({ weight: stateModel.weight ?? 1, model: this.generateModel(model) });
     }
 
     // Normalize the weights
@@ -111,6 +118,114 @@ export default class BlockStateLoader {
     }
 
     return models;
+  }
+
+  /**
+   * Loads block state multipart.
+   * @param blockState Block state containing the multipart.
+   * @param tags Data tags used to load the multipart.
+   * @returns A promise for the loaded block state multipart.
+   */
+  private async loadMultipartAsync(
+    blockState: BlockState,
+    tags: string[],
+  ): Promise<WeightedModel[]> {
+    throw new Error('Not implemented');
+  }
+
+  /**
+   * Generates a model using the provided model data.
+   * @param model Model data.
+   * @returns Generated model.
+   */
+  private generateModel(model: BlockModel): TransformNode {
+    if (!model.elements) {
+      throw new Error('There are no elements in this model');
+    }
+
+    const scale = 1 / 16;
+    const modelParent = new TransformNode('model');
+    for (const element of model.elements) {
+      const from = new Vector3(
+        element.from[0],
+        element.from[1],
+        element.from[2],
+      ).scale(scale);
+      const to = new Vector3(
+        element.to[0],
+        element.to[1],
+        element.to[2],
+      ).scale(scale);
+      const size = to.subtract(from);
+      const parent = new TransformNode('element');
+      parent.parent = modelParent;
+      for (const side in element.faces) {
+        if (!Object.prototype.hasOwnProperty.call(element.faces, side)) {
+          continue;
+        }
+        const face = element.faces[side];
+        const texture = face.texture.replace('#', '');
+        const textureFileName = texture.split('/').pop();
+
+        let width: number;
+        let height: number;
+        let position: Vector3;
+        let rotation: Vector3;
+        switch (side) {
+          case 'down': case 'bottom':
+            width = size.x;
+            height = size.z;
+            position = from;
+            rotation = new Vector3(Math.PI / 2, 0, Math.PI);
+            break;
+          case 'up':
+            width = size.x;
+            height = size.z;
+            position = to;
+            rotation = new Vector3((3 * Math.PI) / 2, 0, Math.PI);
+            break;
+          case 'north':
+            width = size.x;
+            height = size.y;
+            position = to;
+            rotation = new Vector3(Math.PI, 0, 0);
+            break;
+          case 'south':
+            width = size.x;
+            height = size.y;
+            position = from;
+            rotation = Vector3.Zero();
+            break;
+          case 'west':
+            width = size.z;
+            height = size.y;
+            position = from;
+            rotation = new Vector3(0, Math.PI / 2, 0);
+            break;
+          case 'east':
+            width = size.z;
+            height = size.y;
+            position = to;
+            rotation = new Vector3(0, (3 * Math.PI) / 2, 0);
+            break;
+          default:
+            width = 1;
+            height = 1;
+            position = Vector3.Zero();
+            rotation = Vector3.Zero();
+            break;
+        }
+        const plane = PlaneBuilder.CreatePlane(side, { width, height });
+        plane.parent = parent;
+        plane.position = position;
+        plane.rotation = rotation;
+        const material = new BackgroundMaterial(side, this.scene);
+        material.diffuseTexture = new Texture(`data/textures/block/${textureFileName}.png`, this.scene, true, true, Texture.NEAREST_SAMPLINGMODE);
+        plane.material = material;
+      }
+    }
+
+    return modelParent;
   }
 
   /**

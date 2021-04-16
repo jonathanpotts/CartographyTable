@@ -2,10 +2,10 @@ import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
-import BlockLoader from './BlockLoader';
 import './index.scss';
-import '@babylonjs/core/Materials/standardMaterial';
 import '@babylonjs/core/Loading/loadingScreen';
+import '@babylonjs/inspector';
+import BlockStateLoader from './BlockStateLoader';
 // import ServerLoader from './ServerLoader';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
@@ -18,7 +18,14 @@ const engine = new Engine(
 
 engine.loadingScreen.displayLoadingUI();
 const scene = new Scene(engine);
-BlockLoader.setScene(scene);
-BlockLoader.load('minecraft:torch');
+scene.debugLayer.show();
 const camera = new UniversalCamera('camera', new Vector3(0, 0, -4), scene);
-engine.loadingScreen.hideLoadingUI();
+camera.attachControl(true);
+const loader = new BlockStateLoader(scene);
+loader.loadAsync('minecraft:torch').then(() => {
+  engine.loadingScreen.hideLoadingUI();
+});
+
+engine.runRenderLoop(() => {
+  scene.render();
+});
