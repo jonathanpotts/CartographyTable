@@ -293,8 +293,8 @@ export default class BlockStateLoader {
         vertexData.applyToMesh(mesh);
 
         // materialName[elementIndex]-textureName
-        const material = BlockMaterial.create(side, this.scene);
-        material.setTexture('textureSampler', loadedTexture);
+        const material = new BlockMaterial(side, this.scene);
+        material.setTexture('diffuse', loadedTexture);
         mesh.material = material;
         mesh.isVisible = false;
       }

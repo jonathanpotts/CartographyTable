@@ -2,11 +2,11 @@ import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
-import './index.scss';
-import '@babylonjs/core/Loading/loadingScreen';
-import '@babylonjs/inspector';
 import BlockStateLoader from './BlockStateLoader';
 // import ServerLoader from './ServerLoader';
+import '@babylonjs/core/Loading/loadingScreen';
+import '@babylonjs/inspector';
+import './index.scss';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 // const serverLoader = new ServerLoader(canvas);
@@ -22,7 +22,7 @@ scene.debugLayer.show();
 const camera = new UniversalCamera('camera', new Vector3(0, 0, -4), scene);
 camera.attachControl(true);
 const loader = new BlockStateLoader(scene);
-loader.loadAsync('minecraft:diamond_ore').then(() => {
+loader.loadAsync('minecraft:grass').then(() => {
   engine.loadingScreen.hideLoadingUI();
 });
 
