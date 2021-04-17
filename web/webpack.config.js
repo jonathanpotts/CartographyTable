@@ -35,6 +35,12 @@ module.exports = {
           'sass-loader',
         ],
       },
+      {
+        test: /\.glsl$/i,
+        include: /src/,
+        exclude: /node_modules/,
+        type: 'asset/source',
+      },
     ],
   },
   resolve: {

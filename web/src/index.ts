@@ -22,7 +22,7 @@ scene.debugLayer.show();
 const camera = new UniversalCamera('camera', new Vector3(0, 0, -4), scene);
 camera.attachControl(true);
 const loader = new BlockStateLoader(scene);
-loader.loadAsync('minecraft:torch').then(() => {
+loader.loadAsync('minecraft:diamond_ore').then(() => {
   engine.loadingScreen.hideLoadingUI();
 });
 

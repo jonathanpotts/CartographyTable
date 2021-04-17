@@ -1,6 +1,5 @@
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { AssetsManager } from '@babylonjs/core/Misc/assetsManager';
-import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
@@ -9,6 +8,7 @@ import { Scene } from '@babylonjs/core/scene';
 import BlockModel from './models/BlockModel';
 import BlockState from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
+import BlockMaterial from './BlockMaterial';
 
 export default class BlockStateLoader {
   /**
@@ -175,11 +175,21 @@ export default class BlockStateLoader {
           continue;
         }
         const face = element.faces[side];
-        const textureLookup = face.texture.replace('#', '');
-        if (!model.textures || !(textureLookup in model.textures)) {
+
+        if (!model.textures) {
           throw new Error('Texture not in model data');
         }
-        const texture = model.textures[textureLookup];
+
+        let { texture } = face;
+
+        while (texture.startsWith('#')) {
+          const lookup = texture.replace('#', '');
+          if (!(lookup in model.textures)) {
+            throw new Error('Texture not in model data');
+          }
+
+          texture = model.textures[lookup];
+        }
 
         const positions: number[] = [];
         const uvs: number[] = face.uv ? [...face.uv] : [];
@@ -192,7 +202,7 @@ export default class BlockStateLoader {
             positions.push(from.x, from.y, from.z);
 
             if (!face.uv) {
-              uvs.push(from.x, from.z, to.x, to.z);
+              uvs.push(element.from[0], element.from[2], element.to[0], element.to[2]);
             }
             break;
 
@@ -203,7 +213,7 @@ export default class BlockStateLoader {
             positions.push(to.x, to.y, from.z);
 
             if (!face.uv) {
-              uvs.push(from.x, from.z, to.x, to.z);
+              uvs.push(element.from[0], element.from[2], element.to[0], element.to[2]);
             }
             break;
 
@@ -214,7 +224,7 @@ export default class BlockStateLoader {
             positions.push(from.x, from.y, to.z);
 
             if (!face.uv) {
-              uvs.push(from.x, from.y, to.x, to.y);
+              uvs.push(element.from[0], element.from[1], element.to[0], element.to[1]);
             }
             break;
 
@@ -225,7 +235,7 @@ export default class BlockStateLoader {
             positions.push(to.x, from.y, from.z);
 
             if (!face.uv) {
-              uvs.push(from.x, from.y, to.x, to.y);
+              uvs.push(element.from[0], element.from[1], element.to[0], element.to[1]);
             }
             break;
 
@@ -236,7 +246,7 @@ export default class BlockStateLoader {
             positions.push(from.x, from.y, from.z);
 
             if (!face.uv) {
-              uvs.push(from.z, from.y, to.z, to.y);
+              uvs.push(element.from[2], element.from[1], element.to[2], element.to[1]);
             }
             break;
 
@@ -247,7 +257,7 @@ export default class BlockStateLoader {
             positions.push(to.x, from.y, to.z);
 
             if (!face.uv) {
-              uvs.push(from.z, from.y, to.z, to.y);
+              uvs.push(element.from[2], element.from[1], element.to[2], element.to[1]);
             }
             break;
 
@@ -264,6 +274,12 @@ export default class BlockStateLoader {
         const normals: number[] = [];
         VertexData.ComputeNormals(positions, indices, normals);
 
+        const loadedTexture = await this.loadTextureAsync(texture);
+        uvs[0] /= loadedTexture.getBaseSize().width;
+        uvs[1] /= loadedTexture.getBaseSize().height;
+        uvs[2] /= loadedTexture.getBaseSize().width;
+        uvs[3] /= loadedTexture.getBaseSize().height;
+
         const vertexData = new VertexData();
         vertexData.positions = positions;
         vertexData.indices = indices;
@@ -276,8 +292,9 @@ export default class BlockStateLoader {
         ];
         vertexData.applyToMesh(mesh);
 
-        const material = new BackgroundMaterial(side, this.scene);
-        material.diffuseTexture = await this.loadTextureAsync(texture);
+        // materialName[elementIndex]-textureName
+        const material = BlockMaterial.create(side, this.scene);
+        material.setTexture('textureSampler', loadedTexture);
         mesh.material = material;
         mesh.isVisible = false;
       }
@@ -308,8 +325,6 @@ export default class BlockStateLoader {
     const loading = async () => {
       await assetsManager.loadAsync();
       task.texture.hasAlpha = true;
-      task.texture.uScale = 1 / task.texture.getBaseSize().width;
-      task.texture.vScale = 1 / task.texture.getBaseSize().height;
       this.textures[texture] = task.texture;
       return task.texture;
     };
