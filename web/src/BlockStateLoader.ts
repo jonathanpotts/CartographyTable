@@ -1,6 +1,5 @@
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { AssetsManager } from '@babylonjs/core/Misc/assetsManager';
-import { Material } from '@babylonjs/core/Materials/material';
 import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
