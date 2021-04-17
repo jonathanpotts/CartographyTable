@@ -1,4 +1,8 @@
-import { BackgroundMaterial, PlaneBuilder, Texture } from '@babylonjs/core';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { AssetsManager } from '@babylonjs/core/Misc/assetsManager';
+import { Material } from '@babylonjs/core/Materials/material';
+import { BackgroundMaterial } from '@babylonjs/core/Materials/Background/backgroundMaterial';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -14,9 +18,14 @@ export default class BlockStateLoader {
   private scene: Scene;
 
   /**
-   * Cache of faces created with materials.
+   * Cache of loaded textures.
    */
-  private materialFaces: Record<string, Mesh>;
+  private textures: Record<string, Texture>;
+
+  /**
+   * Cache of texture load promises.
+   */
+  private textureLoadPromises: Record<string, Promise<Texture>>;
 
   /**
    * Cache of loaded block states.
@@ -29,7 +38,8 @@ export default class BlockStateLoader {
    */
   public constructor(scene: Scene) {
     this.scene = scene;
-    this.materialFaces = {};
+    this.textures = {};
+    this.textureLoadPromises = {};
     this.blockStates = {};
   }
 
@@ -49,6 +59,9 @@ export default class BlockStateLoader {
       const clone = this.blockStates[blockStateName][0].model.clone(blockStateName, null);
       if (!clone) {
         throw new Error('Unable to create a clone');
+      }
+      for (const child of clone.getChildMeshes(false)) {
+        child.isVisible = true;
       }
       return clone;
     };
@@ -105,7 +118,7 @@ export default class BlockStateLoader {
 
     for (const stateModel of stateModels) {
       const model = await this.loadModelAsync(stateModel.model);
-      models.push({ weight: stateModel.weight ?? 1, model: this.generateModel(model) });
+      models.push({ weight: stateModel.weight ?? 1, model: await this.generateModelAsync(model) });
     }
 
     // Normalize the weights
@@ -136,9 +149,9 @@ export default class BlockStateLoader {
   /**
    * Generates a model using the provided model data.
    * @param model Model data.
-   * @returns Generated model.
+   * @returns A promise for the generated model.
    */
-  private generateModel(model: BlockModel): TransformNode {
+  private async generateModelAsync(model: BlockModel): Promise<TransformNode> {
     if (!model.elements) {
       throw new Error('There are no elements in this model');
     }
@@ -156,7 +169,6 @@ export default class BlockStateLoader {
         element.to[1],
         element.to[2],
       ).scale(scale);
-      const size = to.subtract(from);
       const parent = new TransformNode('element');
       parent.parent = modelParent;
       for (const side in element.faces) {
@@ -164,68 +176,147 @@ export default class BlockStateLoader {
           continue;
         }
         const face = element.faces[side];
-        const texture = face.texture.replace('#', '');
-        const textureFileName = texture.split('/').pop();
+        const textureLookup = face.texture.replace('#', '');
+        if (!model.textures || !(textureLookup in model.textures)) {
+          throw new Error('Texture not in model data');
+        }
+        const texture = model.textures[textureLookup];
 
-        let width: number;
-        let height: number;
-        let position: Vector3;
-        let rotation: Vector3;
+        const positions: number[] = [];
+        const uvs: number[] = face.uv ? [...face.uv] : [];
+
         switch (side) {
           case 'down': case 'bottom':
-            width = size.x;
-            height = size.z;
-            position = from;
-            rotation = new Vector3(Math.PI / 2, 0, Math.PI);
+            positions.push(from.x, from.y, to.z);
+            positions.push(to.x, from.y, to.z);
+            positions.push(to.x, from.y, from.z);
+            positions.push(from.x, from.y, from.z);
+
+            if (!face.uv) {
+              uvs.push(from.x, from.z, to.x, to.z);
+            }
             break;
+
           case 'up':
-            width = size.x;
-            height = size.z;
-            position = to;
-            rotation = new Vector3((3 * Math.PI) / 2, 0, Math.PI);
+            positions.push(to.x, to.y, to.z);
+            positions.push(from.x, to.y, to.z);
+            positions.push(from.x, to.y, from.z);
+            positions.push(to.x, to.y, from.z);
+
+            if (!face.uv) {
+              uvs.push(from.x, from.z, to.x, to.z);
+            }
             break;
+
           case 'north':
-            width = size.x;
-            height = size.y;
-            position = to;
-            rotation = new Vector3(Math.PI, 0, 0);
+            positions.push(from.x, to.y, to.z);
+            positions.push(to.x, to.y, to.z);
+            positions.push(to.x, from.y, to.z);
+            positions.push(from.x, from.y, to.z);
+
+            if (!face.uv) {
+              uvs.push(from.x, from.y, to.x, to.y);
+            }
             break;
+
           case 'south':
-            width = size.x;
-            height = size.y;
-            position = from;
-            rotation = Vector3.Zero();
+            positions.push(to.x, to.y, from.z);
+            positions.push(from.x, to.y, from.z);
+            positions.push(from.x, from.y, from.z);
+            positions.push(to.x, from.y, from.z);
+
+            if (!face.uv) {
+              uvs.push(from.x, from.y, to.x, to.y);
+            }
             break;
+
           case 'west':
-            width = size.z;
-            height = size.y;
-            position = from;
-            rotation = new Vector3(0, Math.PI / 2, 0);
+            positions.push(from.x, to.y, from.z);
+            positions.push(from.x, to.y, to.z);
+            positions.push(from.x, from.y, to.z);
+            positions.push(from.x, from.y, from.z);
+
+            if (!face.uv) {
+              uvs.push(from.z, from.y, to.z, to.y);
+            }
             break;
+
           case 'east':
-            width = size.z;
-            height = size.y;
-            position = to;
-            rotation = new Vector3(0, (3 * Math.PI) / 2, 0);
+            positions.push(to.x, to.y, to.z);
+            positions.push(to.x, to.y, from.z);
+            positions.push(to.x, from.y, from.z);
+            positions.push(to.x, from.y, to.z);
+
+            if (!face.uv) {
+              uvs.push(from.z, from.y, to.z, to.y);
+            }
             break;
+
           default:
-            width = 1;
-            height = 1;
-            position = Vector3.Zero();
-            rotation = Vector3.Zero();
             break;
         }
-        const plane = PlaneBuilder.CreatePlane(side, { width, height });
-        plane.parent = parent;
-        plane.position = position;
-        plane.rotation = rotation;
+
+        const mesh = new Mesh(side, this.scene, parent);
+
+        const indices = [
+          0, 1, 2,
+          2, 3, 0,
+        ];
+        const normals: number[] = [];
+        VertexData.ComputeNormals(positions, indices, normals);
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.normals = normals;
+        vertexData.uvs = [
+          uvs[2], uvs[1],
+          uvs[0], uvs[1],
+          uvs[0], uvs[3],
+          uvs[2], uvs[3],
+        ];
+        vertexData.applyToMesh(mesh);
+
         const material = new BackgroundMaterial(side, this.scene);
-        material.diffuseTexture = new Texture(`data/textures/block/${textureFileName}.png`, this.scene, true, true, Texture.NEAREST_SAMPLINGMODE);
-        plane.material = material;
+        material.diffuseTexture = await this.loadTextureAsync(texture);
+        mesh.material = material;
+        mesh.isVisible = false;
       }
     }
 
     return modelParent;
+  }
+
+  /**
+   * Loads a texture.
+   * @param texture URI of the texture to load.
+   * @returns A promise for the loaded texture.
+   */
+  private async loadTextureAsync(texture: string): Promise<Texture> {
+    if (texture in this.textures) {
+      return this.textures[texture];
+    }
+
+    if (texture in this.textureLoadPromises) {
+      return this.textureLoadPromises[texture];
+    }
+
+    const textureFileName = texture.split('/').pop();
+    const assetsManager = new AssetsManager(this.scene);
+    assetsManager.useDefaultLoadingScreen = false;
+    const task = assetsManager.addTextureTask(texture, `data/textures/block/${textureFileName}.png`, true, false, Texture.NEAREST_SAMPLINGMODE);
+
+    const loading = async () => {
+      await assetsManager.loadAsync();
+      task.texture.hasAlpha = true;
+      task.texture.uScale = 1 / task.texture.getBaseSize().width;
+      task.texture.vScale = 1 / task.texture.getBaseSize().height;
+      this.textures[texture] = task.texture;
+      return task.texture;
+    };
+
+    this.textureLoadPromises[texture] = loading();
+    return this.textureLoadPromises[texture];
   }
 
   /**
