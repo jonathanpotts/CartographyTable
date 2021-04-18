@@ -271,8 +271,6 @@ export default class BlockStateLoader {
           0, 1, 2,
           2, 3, 0,
         ];
-        const normals: number[] = [];
-        VertexData.ComputeNormals(positions, indices, normals);
 
         const loadedTexture = await this.loadTextureAsync(texture);
         uvs[0] /= loadedTexture.getBaseSize().width;
@@ -283,7 +281,6 @@ export default class BlockStateLoader {
         const vertexData = new VertexData();
         vertexData.positions = positions;
         vertexData.indices = indices;
-        vertexData.normals = normals;
         vertexData.uvs = [
           uvs[2], uvs[1],
           uvs[0], uvs[1],

@@ -21,4 +21,24 @@ export default class Constants {
    * The maximum value for a stored lighting level.
    */
   static readonly MAX_LIGHT_LEVEL: number = 15;
+
+  /**
+   * The maximum value for brightness.
+   */
+  static readonly MAX_BRIGHTNESS: number = 0.98;
+
+  /**
+   * The minimum value for brightness in the overworld.
+   */
+  static readonly OVERWORLD_MIN_BRIGHTNESS: number = 0.05;
+
+  /**
+   * The minimum value for brightness in the nether.
+   */
+  static readonly NETHER_MIN_BRIGHTNESS: number = 0.25;
+
+  /**
+   * The minimum value for brightness in the end.
+   */
+  static readonly THEEND_MIN_BRIGHTNESS: number = 0.28;
 }
