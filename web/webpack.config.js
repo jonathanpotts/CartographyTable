@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
-module.exports = {
+module.exports = (env) => ({
   entry: './src/index.ts',
   devtool: 'source-map',
   module: {
@@ -12,7 +12,15 @@ module.exports = {
         test: /\.tsx?$/i,
         include: /src/,
         exclude: /node_modules/,
-        use: 'ts-loader',
+        use: [
+          'ts-loader',
+          {
+            loader: 'ifdef-loader',
+            options: {
+              env,
+            },
+          },
+        ],
       },
       {
         test: /\.css$/i,
@@ -47,19 +55,16 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [
-    new MiniCssExtractPlugin({
-      filename: 'bundle.css',
-    }),
+    new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
       title: 'BlockMaps',
       template: 'src/index.html',
     }),
   ],
   devServer: {
-    contentBase: path.join(__dirname, 'serve'),
+    contentBase: path.resolve(__dirname, 'serve'),
   },
-};
+});
