@@ -2,6 +2,7 @@ import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { AssetsManager } from '@babylonjs/core/Misc/assetsManager';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Scene } from '@babylonjs/core/scene';
@@ -9,6 +10,7 @@ import BlockModel from './models/BlockModel';
 import BlockState from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
 import BlockMaterial from './BlockMaterial';
+import Constants from './Constants';
 
 export default class BlockStateLoader {
   /**
@@ -82,7 +84,11 @@ export default class BlockStateLoader {
     }
 
     if (blockState.variants) {
-      this.blockStates[blockStateName] = await this.loadVariantAsync(blockState, tags);
+      this.blockStates[blockStateName] = await this.loadVariantAsync(
+        materialName,
+        blockState,
+        tags,
+      );
     } else if (blockState.multipart) {
       this.blockStates[blockStateName] = await this.loadMultipartAsync(blockState, tags);
     }
@@ -92,13 +98,17 @@ export default class BlockStateLoader {
 
   /**
    * Loads block state variant.
+   * @param materialName Name of the material.
    * @param blockState Block state containing the variant.
    * @param tags Data tags to use to load the variant.
+   * @param biome Biome containing the block.
    * @returns A promise for the loaded block state variant.
    */
   private async loadVariantAsync(
+    materialName: string,
     blockState: BlockState,
     tags: string[],
+    biome?: string,
   ): Promise<WeightedModel[]> {
     if (!blockState.variants) {
       throw new Error('Tried to load variants from a block state that does not contain variants');
@@ -117,7 +127,10 @@ export default class BlockStateLoader {
 
     for (const stateModel of stateModels) {
       const model = await this.loadModelAsync(stateModel.model);
-      models.push({ weight: stateModel.weight ?? 1, model: await this.generateModelAsync(model) });
+      models.push({
+        weight: stateModel.weight ?? 1,
+        model: await this.generateModelAsync(materialName, model),
+      });
     }
 
     // Normalize the weights
@@ -147,10 +160,16 @@ export default class BlockStateLoader {
 
   /**
    * Generates a model using the provided model data.
+   * @param materialName Name of the material.
    * @param model Model data.
+   * @param biome Biome containing the block.
    * @returns A promise for the generated model.
    */
-  private async generateModelAsync(model: BlockModel): Promise<TransformNode> {
+  private async generateModelAsync(
+    materialName: string,
+    model: BlockModel,
+    biome?: string,
+  ): Promise<TransformNode> {
     if (!model.elements) {
       throw new Error('There are no elements in this model');
     }
@@ -292,6 +311,57 @@ export default class BlockStateLoader {
         // materialName[elementIndex]-textureName
         const material = new BlockMaterial(side, this.scene);
         material.setTexture('diffuse', loadedTexture);
+
+        if (face.tintindex !== undefined && face.tintindex !== null) {
+          const tintBiome = biome ?? 'DEFAULT';
+          let tint: Color4;
+
+          switch (materialName) {
+            case 'minecraft:grass_block':
+            case 'minecraft:grass':
+            case 'minecraft:tall_grass':
+            case 'minecraft:fern':
+            case 'minecraft:large_fern':
+            case 'minecraft:potted_fern':
+            case 'minecraft:sugar_cane':
+            default:
+              tint = (tintBiome in Constants.BIOME_GRASS_COLORS)
+                ? Constants.BIOME_GRASS_COLORS[tintBiome]
+                : Constants.BIOME_GRASS_COLORS.DEFAULT;
+              break;
+
+            case 'minecraft:oak_leaves':
+            case 'minecraft:dark_oak_leaves':
+            case 'minecraft:jungle_leaves':
+            case 'minecraft:acacia_leaves':
+            case 'minecraft:vine':
+              tint = (tintBiome in Constants.BIOME_FOILAGE_COLORS)
+                ? Constants.BIOME_FOILAGE_COLORS[tintBiome]
+                : Constants.BIOME_FOILAGE_COLORS.DEFAULT;
+              break;
+
+            case 'minecraft:water':
+              tint = (tintBiome in Constants.BIOME_WATER_COLORS)
+                ? Constants.BIOME_WATER_COLORS[tintBiome]
+                : Constants.BIOME_WATER_COLORS.DEFAULT;
+              break;
+
+            case 'minecraft:birch_leaves':
+              tint = Constants.BIRCH_LEAVES_COLOR;
+              break;
+
+            case 'minecraft:spruce_leaves':
+              tint = Constants.SPRUCE_LEAVES_COLOR;
+              break;
+
+            case 'minecraft:lily_pad':
+              tint = Constants.LILY_PAD_COLOR;
+              break;
+          }
+
+          material.setTintColor(tint);
+        }
+
         mesh.material = material;
         mesh.isVisible = false;
       }

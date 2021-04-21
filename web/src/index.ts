@@ -35,7 +35,7 @@ loader.loadAsync('minecraft:grass_block', 'snowy=false').then(() => {
 
 // #region Development builds only
 /// #if env.dev
-const debug = async () => {
+(async () => {
   await import('@babylonjs/inspector');
 
   document.addEventListener('keydown', (ev) => {
@@ -47,8 +47,6 @@ const debug = async () => {
       }
     }
   });
-};
-
-debug();
+})();
 /// #endif
 // #endregion
