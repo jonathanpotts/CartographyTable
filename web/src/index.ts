@@ -13,10 +13,12 @@ import './index.scss';
 const loadingScreenDiv = document.getElementById('loading') as HTMLDivElement;
 const loadingScreen: ILoadingScreen = {
   displayLoadingUI: () => {
-    loadingScreenDiv.style.opacity = '1';
+    loadingScreenDiv.classList.remove('hidden');
+    loadingScreenDiv.classList.add('visible');
   },
   hideLoadingUI: () => {
-    loadingScreenDiv.style.opacity = '0';
+    loadingScreenDiv.classList.remove('visible');
+    loadingScreenDiv.classList.add('hidden');
   },
   loadingUIBackgroundColor: 'black',
   loadingUIText: '',
