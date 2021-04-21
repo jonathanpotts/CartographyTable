@@ -15,6 +15,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.sf.image4j.codec.ico.ICOEncoder;
+
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +32,8 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
+
+import javax.imageio.ImageIO;
 
 /**
  * Executes the "refresh-map-data" command.
@@ -297,6 +302,8 @@ public class CommandRefreshMapData implements CommandExecutor {
       Files.copy(clientStream, clientTempFile, StandardCopyOption.REPLACE_EXISTING);
     }
 
+    Path iconDestination = pluginDataPath.resolve("web").resolve("apple-touch-icon.png");
+
     try (FileSystem fs = FileSystems.newFileSystem(clientTempFile, null)) {
       Path texturesPath = webDataPath.resolve("textures").resolve("block");
 
@@ -369,9 +376,28 @@ public class CommandRefreshMapData implements CommandExecutor {
         Files.createDirectories(destination.getParent());
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
       }
+
+      Path serverPath = plugin.getServer().getWorldContainer().toPath();
+      Path serverIconPath = serverPath.resolve("server-icon.png");
+
+      Files.createDirectories(iconDestination.getParent());
+
+      if (Files.exists(serverIconPath)) {
+        Files.copy(serverIconPath, iconDestination, StandardCopyOption.REPLACE_EXISTING);
+      } else {
+        Path defaultIconPath = fs.getRootDirectories().iterator().next().resolve("assets").resolve("minecraft")
+          .resolve("textures").resolve("misc").resolve("unknown_server.png");
+        Files.copy(defaultIconPath, iconDestination, StandardCopyOption.REPLACE_EXISTING);
+      }
     }
 
     Files.delete(clientTempFile);
+
+    Path favicon = pluginDataPath.resolve("web").resolve("favicon.ico");
+    Files.createDirectories(favicon.getParent());
+
+    BufferedImage serverIcon = ImageIO.read(iconDestination.toFile());
+    ICOEncoder.write(serverIcon, favicon.toFile());
   }
 
   /**
@@ -448,7 +474,7 @@ public class CommandRefreshMapData implements CommandExecutor {
    */
   private void processChunk(World world, VectorXZ coordinates)
       throws InterruptedException, ExecutionException, IOException {
-    Map<Integer, Map<Integer, Map<Integer, BlockModel>>> chunkBlocks = plugin.getServer().getScheduler()
+    Map<Integer, Map<Integer, Map<Integer, BlockDataModel>>> chunkBlocks = plugin.getServer().getScheduler()
         .callSyncMethod(plugin, () -> {
           if (!world.isChunkGenerated(coordinates.x, coordinates.z)) {
             return null;
@@ -456,12 +482,12 @@ public class CommandRefreshMapData implements CommandExecutor {
 
           Chunk chunk = world.getChunkAt(coordinates.x, coordinates.z);
           ChunkSnapshot snapshot = chunk.getChunkSnapshot();
-          Map<Integer, Map<Integer, Map<Integer, BlockModel>>> blocks = null;
+          Map<Integer, Map<Integer, Map<Integer, BlockDataModel>>> blocks = null;
 
           for (int y = 0; y < world.getMaxHeight(); y++) {
             for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
               for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-                BlockModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
+                BlockDataModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
 
                 if (blockModel == null) {
                   continue;
@@ -504,7 +530,7 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @param z             Z coordinate of the block in the chunk.
    * @return The processes block data.
    */
-  private BlockModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
+  private BlockDataModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
       int z) {
     BlockData blockData = chunkSnapshot.getBlockData(x, y, z);
 
@@ -536,7 +562,7 @@ public class CommandRefreshMapData implements CommandExecutor {
       }
     }
 
-    BlockModel blockModel = new BlockModel();
+    BlockDataModel blockModel = new BlockDataModel();
     blockModel.material = blockData.getMaterial().ordinal();
 
     String data = blockData.getAsString();
@@ -566,6 +592,8 @@ public class CommandRefreshMapData implements CommandExecutor {
 
     if (tintedMaterials.contains(blockData.getMaterial())) {
       blockModel.biome = world.getBiome(x, y, z).ordinal();
+      blockModel.temperature = world.getTemperature(x, y, z);
+      blockModel.humidity = world.getHumidity(x, y, z);
     }
 
     if (blockData.getMaterial().isAir() && blockModel.skyLight == null && blockModel.emittedLight == null) {

@@ -3,7 +3,7 @@ package com.jonathanpotts.blockmaps.shared.models;
 /**
  * Stores data used to process a block.
  */
-public class BlockModel {
+public class BlockDataModel {
   /**
    * Material ID ordinal.
    */
@@ -25,7 +25,17 @@ public class BlockModel {
   public Integer emittedLight;
 
   /**
-   * Biome the block is in.
+   * Biome containing the block.
    */
   public Integer biome;
+
+  /**
+   * Temperature at the block.
+   */
+  public Double temperature;
+
+  /**
+   * Humidity at the block.
+   */
+  public Double humidity;
 }

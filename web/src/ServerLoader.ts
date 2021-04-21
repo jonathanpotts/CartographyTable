@@ -73,7 +73,7 @@ export default class ServerLoader {
 
     this.loaded = true;
 
-    await Helpers.load();
+    await Helpers.loadAsync();
 
     const response = await fetch('data/server.json');
     if (!response.ok) {

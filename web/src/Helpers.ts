@@ -19,7 +19,7 @@ export default class Helpers {
   /**
    * Loads data used by the helper methods.
    */
-  public static async load(): Promise<void> {
+  public static async loadAsync(): Promise<void> {
     if (!this.materialsMap) {
       const materialsResponse = await fetch('data/materials.json');
       if (!materialsResponse.ok) {

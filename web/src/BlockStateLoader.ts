@@ -11,6 +11,8 @@ import BlockState from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
 import BlockMaterial from './BlockMaterial';
 import Constants from './Constants';
+import BlockDataModel from './models/BlockDataModel';
+import Helpers from './Helpers';
 
 export default class BlockStateLoader {
   /**
@@ -46,14 +48,19 @@ export default class BlockStateLoader {
 
   /**
    * Load a block state.
-   * @param materialName Name of the block state material.
-   * @param blockData Additional block data.
+   * @param blockDataModel Block data model for the block.
    * @returns A promise for the loaded block state.
    */
-  public async loadAsync(
-    materialName: string,
-    blockData?: string,
-  ): Promise<TransformNode> {
+  public async loadAsync(blockDataModel: BlockDataModel): Promise<TransformNode> {
+    const materialName = Helpers.getMaterialName(blockDataModel.material);
+
+    if (!materialName) {
+      throw new Error('Unable to find material');
+    }
+
+    const blockData = blockDataModel.data;
+
+    /*
     const blockStateName = blockData ? `${materialName}[${blockData}]` : materialName;
 
     const createClone = (): TransformNode => {
@@ -70,6 +77,7 @@ export default class BlockStateLoader {
     if (blockStateName in this.blockStates) {
       return createClone();
     }
+    */
 
     const blockStateFile = materialName.split(':').pop();
     const response = await fetch(`data/blockstates/${blockStateFile}.json`);
@@ -83,32 +91,24 @@ export default class BlockStateLoader {
       tags.push('');
     }
 
-    if (blockState.variants) {
-      this.blockStates[blockStateName] = await this.loadVariantAsync(
-        materialName,
-        blockState,
-        tags,
-      );
-    } else if (blockState.multipart) {
-      this.blockStates[blockStateName] = await this.loadMultipartAsync(blockState, tags);
+    if (blockState.multipart) {
+      return (await this.loadMultipartAsync(blockDataModel, blockState, tags))[0].model;
     }
 
-    return createClone();
+    return (await this.loadVariantAsync(blockDataModel, blockState, tags))[0].model;
   }
 
   /**
    * Loads block state variant.
-   * @param materialName Name of the material.
-   * @param blockState Block state containing the variant.
-   * @param tags Data tags to use to load the variant.
-   * @param biome Biome containing the block.
+   * @param blockDataModel Block data model for the block.
+   * @param blockState Loaded block state.
+   * @param tags Tags for the block state.
    * @returns A promise for the loaded block state variant.
    */
   private async loadVariantAsync(
-    materialName: string,
+    blockDataModel: BlockDataModel,
     blockState: BlockState,
     tags: string[],
-    biome?: string,
   ): Promise<WeightedModel[]> {
     if (!blockState.variants) {
       throw new Error('Tried to load variants from a block state that does not contain variants');
@@ -129,7 +129,7 @@ export default class BlockStateLoader {
       const model = await this.loadModelAsync(stateModel.model);
       models.push({
         weight: stateModel.weight ?? 1,
-        model: await this.generateModelAsync(materialName, model),
+        model: await this.generateModelAsync(blockDataModel, model),
       });
     }
 
@@ -147,11 +147,13 @@ export default class BlockStateLoader {
 
   /**
    * Loads block state multipart.
+   * @param blockDataModel Block data model for the block.
    * @param blockState Block state containing the multipart.
    * @param tags Data tags used to load the multipart.
    * @returns A promise for the loaded block state multipart.
    */
   private async loadMultipartAsync(
+    blockDataModel: BlockDataModel,
     blockState: BlockState,
     tags: string[],
   ): Promise<WeightedModel[]> {
@@ -160,19 +162,19 @@ export default class BlockStateLoader {
 
   /**
    * Generates a model using the provided model data.
-   * @param materialName Name of the material.
+   * @param blockDataModel Block data model for the block.
    * @param model Model data.
-   * @param biome Biome containing the block.
    * @returns A promise for the generated model.
    */
   private async generateModelAsync(
-    materialName: string,
+    blockDataModel: BlockDataModel,
     model: BlockModel,
-    biome?: string,
   ): Promise<TransformNode> {
     if (!model.elements) {
       throw new Error('There are no elements in this model');
     }
+
+    const materialName = Helpers.getMaterialName(blockDataModel.material);
 
     const scale = 1 / 16;
     const modelParent = new TransformNode('model');
@@ -313,7 +315,7 @@ export default class BlockStateLoader {
         material.setTexture('diffuse', loadedTexture);
 
         if (face.tintindex !== undefined && face.tintindex !== null) {
-          const tintBiome = biome ?? 'DEFAULT';
+          const tintBiome = blockDataModel.biome ?? 'DEFAULT';
           let tint: Color4;
 
           switch (materialName) {
@@ -325,9 +327,7 @@ export default class BlockStateLoader {
             case 'minecraft:potted_fern':
             case 'minecraft:sugar_cane':
             default:
-              tint = (tintBiome in Constants.BIOME_GRASS_COLORS)
-                ? Constants.BIOME_GRASS_COLORS[tintBiome]
-                : Constants.BIOME_GRASS_COLORS.DEFAULT;
+              tint = new Color4(1, 1, 1, 1);
               break;
 
             case 'minecraft:oak_leaves':
@@ -335,9 +335,7 @@ export default class BlockStateLoader {
             case 'minecraft:jungle_leaves':
             case 'minecraft:acacia_leaves':
             case 'minecraft:vine':
-              tint = (tintBiome in Constants.BIOME_FOILAGE_COLORS)
-                ? Constants.BIOME_FOILAGE_COLORS[tintBiome]
-                : Constants.BIOME_FOILAGE_COLORS.DEFAULT;
+              tint = new Color4(1, 1, 1, 1);
               break;
 
             case 'minecraft:water':
@@ -363,7 +361,7 @@ export default class BlockStateLoader {
         }
 
         mesh.material = material;
-        mesh.isVisible = false;
+        // mesh.isVisible = false;
       }
     }
 

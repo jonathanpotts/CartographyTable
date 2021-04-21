@@ -23,9 +23,19 @@ interface BlockDataModel {
   emittedLight?: number;
 
   /**
-   * Biome the block is in.
+   * Biome containing the block.
    */
   biome?: number;
+
+  /**
+   * Temperature at the block.
+   */
+  temperature?: number;
+
+  /**
+   * Humidity at the block.
+   */
+  humidity?: number;
 }
 
 export default BlockDataModel;

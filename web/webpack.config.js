@@ -29,7 +29,12 @@ module.exports = (env) => ({
         sideEffects: true,
         use: [
           MiniCssExtractPlugin.loader,
-          'css-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              url: false,
+            },
+          },
         ],
       },
       {
@@ -39,7 +44,12 @@ module.exports = (env) => ({
         sideEffects: true,
         use: [
           MiniCssExtractPlugin.loader,
-          'css-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              url: false,
+            },
+          },
           'sass-loader',
         ],
       },
