@@ -7,8 +7,17 @@ import { ILoadingScreen } from '@babylonjs/core/Loading/loadingScreen';
 import BlockStateLoader from './BlockStateLoader';
 // import ServerLoader from './ServerLoader';
 import BlockDataModel from './models/BlockDataModel';
+import ServerModel from './models/ServerModel';
 import Helpers from './Helpers';
 import './index.scss';
+
+fetch('data/server.json').then(async (response) => {
+  if (!response.ok) {
+    throw new Error('Unable to retrieve server data');
+  }
+  const serverData: ServerModel = await response.json();
+  document.title = `${serverData.motd} - BlockMaps`;
+});
 
 const loadingScreenDiv = document.getElementById('loading') as HTMLDivElement;
 const loadingScreen: ILoadingScreen = {
