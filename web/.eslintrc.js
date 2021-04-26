@@ -19,6 +19,7 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
+    'no-useless-constructor': 'off',
     'no-plusplus': 'off',
     'no-continue': 'off',
     'no-await-in-loop': 'off',

@@ -16,11 +16,6 @@ import Helpers from './Helpers';
 
 export default class BlockStateLoader {
   /**
-   * Scene to load blocks into.
-   */
-  private scene: Scene;
-
-  /**
    * Cache of loaded textures.
    */
   private textures: Record<string, Texture>;
@@ -33,14 +28,13 @@ export default class BlockStateLoader {
   /**
    * Cache of loaded block states.
    */
-  private blockStates: Record<string, WeightedModel[]>;
+  private blockStates: Record<string, WeightedModel[][]>;
 
   /**
    * Creates a block state loader.
    * @param scene Scene to load blocks into.
    */
-  public constructor(scene: Scene) {
-    this.scene = scene;
+  public constructor(private scene: Scene) {
     this.textures = {};
     this.textureLoadPromises = {};
     this.blockStates = {};
@@ -59,10 +53,9 @@ export default class BlockStateLoader {
     }
 
     const blockData = blockDataModel.data;
-
-    /*
     const blockStateName = blockData ? `${materialName}[${blockData}]` : materialName;
 
+    /*
     const createClone = (): TransformNode => {
       const clone = this.blockStates[blockStateName][0].model.clone(blockStateName, null);
       if (!clone) {
@@ -92,10 +85,14 @@ export default class BlockStateLoader {
     }
 
     if (blockState.multipart) {
-      return (await this.loadMultipartAsync(blockDataModel, blockState, tags))[0].model;
+      const models = await this.loadMultipartAsync(blockDataModel, blockState, tags);
+      this.blockStates[blockStateName] = models;
+      return models[0][0].model;
     }
 
-    return (await this.loadVariantAsync(blockDataModel, blockState, tags))[0].model;
+    const models = await this.loadVariantAsync(blockDataModel, blockState, tags);
+    this.blockStates[blockStateName] = models;
+    return models[0][0].model;
   }
 
   /**
@@ -109,7 +106,7 @@ export default class BlockStateLoader {
     blockDataModel: BlockDataModel,
     blockState: BlockState,
     tags: string[],
-  ): Promise<WeightedModel[]> {
+  ): Promise<WeightedModel[][]> {
     if (!blockState.variants) {
       throw new Error('Tried to load variants from a block state that does not contain variants');
     }
@@ -142,7 +139,7 @@ export default class BlockStateLoader {
       model.weight /= weightTotal;
     }
 
-    return models;
+    return [models];
   }
 
   /**
@@ -156,7 +153,7 @@ export default class BlockStateLoader {
     blockDataModel: BlockDataModel,
     blockState: BlockState,
     tags: string[],
-  ): Promise<WeightedModel[]> {
+  ): Promise<WeightedModel[][]> {
     if (!blockState.multipart) {
       throw new Error('Tried to load multiparts from a block state that does not contain multiparts');
     }
@@ -169,7 +166,7 @@ export default class BlockStateLoader {
       tagConditions[condition] = value;
     }
 
-    const models: BlockStateModel[] = [];
+    const models: WeightedModel[][] = [];
     for (const part of multipart) {
       let valid = true;
       if (part.when) {
@@ -185,14 +182,35 @@ export default class BlockStateLoader {
         continue;
       }
 
+      const stateModels: BlockStateModel[] = [];
       if (Array.isArray(part.apply)) {
-        models.push(...part.apply);
+        stateModels.push(...part.apply);
       } else {
-        models.push(part.apply);
+        stateModels.push(part.apply);
+      }
+
+      const partModels: WeightedModel[] = [];
+      for (const stateModel of stateModels) {
+        const model = await this.loadModelAsync(stateModel.model);
+        partModels.push({
+          weight: stateModel.weight ?? 1,
+          model: await this.generateModelAsync(blockDataModel, model),
+        });
+      }
+
+      models.push(partModels);
+
+      // Normalize the weights
+      let weightTotal = 0;
+      for (const model of partModels) {
+        weightTotal += model.weight;
+      }
+      for (const model of partModels) {
+        model.weight /= weightTotal;
       }
     }
 
-    throw new Error('Not implemented');
+    return models;
   }
 
   /**
