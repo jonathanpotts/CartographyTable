@@ -7,7 +7,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Scene } from '@babylonjs/core/scene';
 import BlockModel from './models/BlockModel';
-import BlockState from './models/BlockState';
+import BlockState, { BlockStateModel } from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
 import BlockMaterial from './BlockMaterial';
 import Constants from './Constants';
@@ -157,6 +157,41 @@ export default class BlockStateLoader {
     blockState: BlockState,
     tags: string[],
   ): Promise<WeightedModel[]> {
+    if (!blockState.multipart) {
+      throw new Error('Tried to load multiparts from a block state that does not contain multiparts');
+    }
+
+    const { multipart } = blockState;
+
+    const tagConditions: Record<string, string> = {};
+    for (const tag of tags) {
+      const [condition, value] = tag.split('=');
+      tagConditions[condition] = value;
+    }
+
+    const models: BlockStateModel[] = [];
+    for (const part of multipart) {
+      let valid = true;
+      if (part.when) {
+        for (const condition in part.when) {
+          if (!(condition in tagConditions && tagConditions[condition] in part.when[condition].split('|'))) {
+            valid = false;
+            break;
+          }
+        }
+      }
+
+      if (!valid) {
+        continue;
+      }
+
+      if (Array.isArray(part.apply)) {
+        models.push(...part.apply);
+      } else {
+        models.push(part.apply);
+      }
+    }
+
     throw new Error('Not implemented');
   }
 

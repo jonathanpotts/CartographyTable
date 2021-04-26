@@ -35,7 +35,7 @@ export interface MultiPart {
   /**
    * When to apply the model.
    */
-  when: Record<string, string>;
+  when?: Record<string, string>;
 
   /**
    * The model to apply.
