@@ -1,3 +1,4 @@
+import { Tags } from '@babylonjs/core';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
@@ -30,5 +31,18 @@ export default class WorldLoader {
         }
       }
     }
+
+    const subMeshes: Mesh[] = [];
+
+    for (const [blockCoordinates, blockMesh] of blocks) {
+      // check for face culling
+      for (const blockSubMesh of blockMesh.subMeshes) {
+        const tags = Tags.GetTags(blockSubMesh);
+      }
+
+      subMeshes.push(blockMesh);
+    }
+
+    const chunk = Mesh.MergeMeshes(subMeshes);
   }
 }
