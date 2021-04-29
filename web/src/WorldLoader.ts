@@ -3,12 +3,16 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { ungzip } from 'pako';
+import BlockStateLoader from './BlockStateLoader';
 import BlockDataModel from './models/BlockDataModel';
 import VectorXZ from './models/VectorXZ';
 import WorldModel from './models/WorldModel';
 
 export default class WorldLoader {
+  private blockStateLoader: BlockStateLoader;
+
   public constructor(private world: WorldModel, private scene: Scene) {
+    this.blockStateLoader = new BlockStateLoader(scene);
   }
 
   public async loadChunkAsync(coordinates: VectorXZ): Promise<void> {
@@ -28,6 +32,7 @@ export default class WorldLoader {
       for (const [x, xMap] of Object.entries(yMap)) {
         for (const [z, blockModel] of Object.entries(xMap)) {
           const blockCoordinates = new Vector3(parseInt(x, 10), parseInt(y, 10), parseInt(z, 10));
+          const model = await this.blockStateLoader.loadAsync(blockModel);
         }
       }
     }
