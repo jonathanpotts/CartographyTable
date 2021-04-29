@@ -8,14 +8,16 @@ A Minecraft server plugin that creates 3D maps of your server that can be viewed
 
 ## Building From Source
 
-To build from source, the following software must be installed:
+### Prerequisite Software
+
+To build from source, the following prerequisite software must be installed:
 
 * [OpenJDK](https://openjdk.java.net/) 8+
 * [Node.js](https://nodejs.org/)
 
-Steps to build:
+### Steps to build
 
-1. Download the software referenced above.
+1. If not already installed, download and install the prerequisite software.
 2. Clone the `main` branch of the repository.
 3. Navigate to the `plugin` directory in a terminal.
 4. Run `./gradlew clean webShadowJar`.
