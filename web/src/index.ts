@@ -57,6 +57,7 @@ engine.runRenderLoop(() => {
 });
 
 Helpers.loadAsync().then(() => {
+  /*
   const testBlock: BlockDataModel = {
     material: 8,
     data: 'snowy=false',
@@ -64,6 +65,9 @@ Helpers.loadAsync().then(() => {
     temperature: 0.7,
     humidity: 0.8,
   };
+  */
+
+  const testBlock: BlockDataModel = { material: 171 };
 
   const loader = new BlockStateLoader(scene);
   loader.loadAsync(testBlock).then(() => {

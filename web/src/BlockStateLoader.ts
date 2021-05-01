@@ -4,17 +4,21 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Scene } from '@babylonjs/core/scene';
+import { Tags } from '@babylonjs/core/Misc/tags';
 import BlockModel from './models/BlockModel';
 import BlockState, { BlockStateModel } from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
 import BlockMaterial from './BlockMaterial';
-import Constants from './Constants';
 import BlockDataModel from './models/BlockDataModel';
 import Helpers from './Helpers';
 
 export default class BlockStateLoader {
+  /**
+   * Cache of created materials.
+   */
+  private materials: Record<string, BlockMaterial>;
+
   /**
    * Cache of loaded textures.
    */
@@ -35,6 +39,7 @@ export default class BlockStateLoader {
    * @param scene Scene to load blocks into.
    */
   public constructor(private scene: Scene) {
+    this.materials = {};
     this.textures = {};
     this.textureLoadPromises = {};
     this.blockStates = {};
@@ -45,7 +50,7 @@ export default class BlockStateLoader {
    * @param blockDataModel Block data model for the block.
    * @returns A promise for the loaded block state.
    */
-  public async loadAsync(blockDataModel: BlockDataModel): Promise<TransformNode> {
+  public async loadAsync(blockDataModel: BlockDataModel): Promise<Mesh> {
     const materialName = Helpers.getMaterialName(blockDataModel.material);
 
     if (!materialName) {
@@ -222,15 +227,15 @@ export default class BlockStateLoader {
   private async generateModelAsync(
     blockDataModel: BlockDataModel,
     model: BlockModel,
-  ): Promise<TransformNode> {
+  ): Promise<Mesh> {
     if (!model.elements) {
       throw new Error('There are no elements in this model');
     }
 
-    const materialName = Helpers.getMaterialName(blockDataModel.material);
-
     const scale = 1 / 16;
-    const modelParent = new TransformNode('model');
+
+    const elementMeshes: Mesh[] = [];
+
     for (const element of model.elements) {
       const from = new Vector3(
         element.from[0],
@@ -242,8 +247,9 @@ export default class BlockStateLoader {
         element.to[1],
         element.to[2],
       ).scale(scale);
-      const parent = new TransformNode('element');
-      parent.parent = modelParent;
+
+      const faceMeshes: Mesh[] = [];
+
       for (const side in element.faces) {
         if (!Object.prototype.hasOwnProperty.call(element.faces, side)) {
           continue;
@@ -339,7 +345,12 @@ export default class BlockStateLoader {
             break;
         }
 
-        const mesh = new Mesh(side, this.scene, parent);
+        const mesh = new Mesh(side, this.scene);
+
+        if (face.cullface) {
+          Tags.EnableFor(mesh);
+          Tags.AddTagsTo(mesh, `cullface-${face.cullface}`);
+        }
 
         const indices = [
           0, 1, 2,
@@ -363,62 +374,34 @@ export default class BlockStateLoader {
         ];
         vertexData.applyToMesh(mesh);
 
-        // materialName[elementIndex]-textureName
-        const material = new BlockMaterial(side, this.scene);
-        material.setTexture('diffuse', loadedTexture);
-
-        if (face.tintindex !== undefined && face.tintindex !== null) {
-          const tintBiome = blockDataModel.biome ?? 'DEFAULT';
-          let tint: Color4;
-
-          switch (materialName) {
-            case 'minecraft:grass_block':
-            case 'minecraft:grass':
-            case 'minecraft:tall_grass':
-            case 'minecraft:fern':
-            case 'minecraft:large_fern':
-            case 'minecraft:potted_fern':
-            case 'minecraft:sugar_cane':
-            default:
-              tint = new Color4(1, 1, 1, 1);
-              break;
-
-            case 'minecraft:oak_leaves':
-            case 'minecraft:dark_oak_leaves':
-            case 'minecraft:jungle_leaves':
-            case 'minecraft:acacia_leaves':
-            case 'minecraft:vine':
-              tint = new Color4(1, 1, 1, 1);
-              break;
-
-            case 'minecraft:water':
-              tint = (tintBiome in Constants.BIOME_WATER_COLORS)
-                ? Constants.BIOME_WATER_COLORS[tintBiome]
-                : Constants.BIOME_WATER_COLORS.DEFAULT;
-              break;
-
-            case 'minecraft:birch_leaves':
-              tint = Constants.BIRCH_LEAVES_COLOR;
-              break;
-
-            case 'minecraft:spruce_leaves':
-              tint = Constants.SPRUCE_LEAVES_COLOR;
-              break;
-
-            case 'minecraft:lily_pad':
-              tint = Constants.LILY_PAD_COLOR;
-              break;
-          }
-
-          material.setTintColor(tint);
-        }
-
+        const material = this.createMaterial(loadedTexture);
         mesh.material = material;
-        // mesh.isVisible = false;
+
+        faceMeshes.push(mesh);
       }
+
+      // TODO: Replace with custom merge function
+      const elementMesh = Mesh.MergeMeshes(
+        faceMeshes, true, false, undefined, false, true,
+      );
+
+      if (!elementMesh) {
+        throw new Error('Unable to merge face meshes into an element mesh');
+      }
+
+      elementMeshes.push(elementMesh);
     }
 
-    return modelParent;
+    // TODO: Replace with custom merge function
+    const modelMesh = Mesh.MergeMeshes(
+      elementMeshes, true, false, undefined, false, true,
+    );
+
+    if (!modelMesh) {
+      throw new Error('Unable to merge element meshes into a model mesh');
+    }
+
+    return modelMesh;
   }
 
   /**
@@ -442,6 +425,7 @@ export default class BlockStateLoader {
 
     const loading = async () => {
       await assetsManager.loadAsync();
+      task.texture.name = texture;
       task.texture.hasAlpha = true;
       this.textures[texture] = task.texture;
       return task.texture;
@@ -449,6 +433,52 @@ export default class BlockStateLoader {
 
     this.textureLoadPromises[texture] = loading();
     return this.textureLoadPromises[texture];
+  }
+
+  /**
+   * Creates a material or loads a cached material.
+   * @param texture Texture to use for the material.
+   * @param tintColor Tint color to use for the material.
+   * @param light Light level to use for the material.
+   * @returns The created or loaded material.
+   */
+  private createMaterial(texture: Texture, tintColor?: Color4, light?: number): BlockMaterial {
+    let materialData = '';
+    if (tintColor !== undefined && tintColor !== null) {
+      materialData += `tint=${tintColor.toHexString}`;
+    }
+
+    if (light !== undefined && light !== null) {
+      if (materialData.length > 0) {
+        materialData += ',';
+      }
+
+      materialData += `light=${light}`;
+    }
+
+    if (materialData.length > 0) {
+      materialData = `[${materialData}]`;
+    }
+
+    const materialName = `${texture.name}${materialData}`;
+
+    if (materialName in this.materials) {
+      return this.materials[materialName];
+    }
+
+    const material = new BlockMaterial(materialName, this.scene);
+    material.setDiffuseTexture(texture);
+
+    if (tintColor !== undefined && tintColor !== null) {
+      material.setTintColor(tintColor);
+    }
+
+    if (light !== undefined && light !== null) {
+      material.setLightLevel(light);
+    }
+
+    this.materials[materialName] = material;
+    return material;
   }
 
   /**

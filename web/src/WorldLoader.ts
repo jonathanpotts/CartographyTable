@@ -2,7 +2,7 @@ import { Tags } from '@babylonjs/core';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
-import { ungzip } from 'pako';
+import Pako from 'pako';
 import BlockStateLoader from './BlockStateLoader';
 import BlockDataModel from './models/BlockDataModel';
 import VectorXZ from './models/VectorXZ';
@@ -22,7 +22,7 @@ export default class WorldLoader {
     }
 
     const data = new Uint8Array(await response.arrayBuffer());
-    const json = ungzip(data, { to: 'string' });
+    const json = Pako.inflate(data, { to: 'string' });
     const chunkBlocks:
       Record<number, Record<number, Record<number, BlockDataModel>>> = JSON.parse(json);
 

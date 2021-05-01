@@ -1,4 +1,4 @@
-import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { Mesh } from '@babylonjs/core';
 
 /**
  * A weighted model.
@@ -12,7 +12,7 @@ interface WeightedModel {
   /**
    * Model.
    */
-  model: TransformNode;
+  model: Mesh;
 }
 
 export default WeightedModel;
