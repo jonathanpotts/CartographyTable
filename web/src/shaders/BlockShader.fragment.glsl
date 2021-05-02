@@ -6,8 +6,8 @@ varying vec2 vUV;
 
 void main(void) {
   vec4 color = texture2D(diffuse, vUV);
-  color *= tintColor;
-  color *= shadeColor;
+  // color *= tintColor;
+  // color *= shadeColor;
 
   gl_FragColor = color;
 }

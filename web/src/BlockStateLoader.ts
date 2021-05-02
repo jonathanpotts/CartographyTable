@@ -1,4 +1,5 @@
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { VertexBuffer } from '@babylonjs/core/Meshes/buffer';
 import { AssetsManager } from '@babylonjs/core/Misc/assetsManager';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -6,6 +7,9 @@ import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { Tags } from '@babylonjs/core/Misc/tags';
+import { SubMesh } from '@babylonjs/core/Meshes/subMesh';
+import { MultiMaterial } from '@babylonjs/core/Materials/multiMaterial';
+import { Material } from '@babylonjs/core/Materials/material';
 import BlockModel from './models/BlockModel';
 import BlockState, { BlockStateModel } from './models/BlockState';
 import WeightedModel from './models/WeightedModel';
@@ -13,11 +17,19 @@ import BlockMaterial from './BlockMaterial';
 import BlockDataModel from './models/BlockDataModel';
 import Helpers from './Helpers';
 
+/**
+ * Loads and processes block states.
+ */
 export default class BlockStateLoader {
   /**
    * Cache of created materials.
    */
   private materials: Record<string, BlockMaterial>;
+
+  /**
+   * Cache of created multi-materials.
+   */
+  private multiMaterials: Record<string, MultiMaterial>;
 
   /**
    * Cache of loaded textures.
@@ -40,6 +52,7 @@ export default class BlockStateLoader {
    */
   public constructor(private scene: Scene) {
     this.materials = {};
+    this.multiMaterials = {};
     this.textures = {};
     this.textureLoadPromises = {};
     this.blockStates = {};
@@ -59,23 +72,6 @@ export default class BlockStateLoader {
 
     const blockData = blockDataModel.data;
     const blockStateName = blockData ? `${materialName}[${blockData}]` : materialName;
-
-    /*
-    const createClone = (): TransformNode => {
-      const clone = this.blockStates[blockStateName][0].model.clone(blockStateName, null);
-      if (!clone) {
-        throw new Error('Unable to create a clone');
-      }
-      for (const child of clone.getChildMeshes(false)) {
-        child.isVisible = true;
-      }
-      return clone;
-    };
-
-    if (blockStateName in this.blockStates) {
-      return createClone();
-    }
-    */
 
     const blockStateFile = materialName.split(':').pop();
     const response = await fetch(`data/blockstates/${blockStateFile}.json`);
@@ -347,10 +343,12 @@ export default class BlockStateLoader {
 
         const mesh = new Mesh(side, this.scene);
 
+        /*
         if (face.cullface) {
           Tags.EnableFor(mesh);
           Tags.AddTagsTo(mesh, `cullface-${face.cullface}`);
         }
+        */
 
         const indices = [
           0, 1, 2,
@@ -374,34 +372,141 @@ export default class BlockStateLoader {
         ];
         vertexData.applyToMesh(mesh);
 
-        const material = this.createMaterial(loadedTexture);
+        const material = this.getMaterial(loadedTexture);
         mesh.material = material;
 
         faceMeshes.push(mesh);
       }
 
-      // TODO: Replace with custom merge function
-      const elementMesh = Mesh.MergeMeshes(
-        faceMeshes, true, false, undefined, false, true,
-      );
-
-      if (!elementMesh) {
-        throw new Error('Unable to merge face meshes into an element mesh');
-      }
-
+      const elementMesh = this.mergeMeshes('element', faceMeshes);
       elementMeshes.push(elementMesh);
     }
 
-    // TODO: Replace with custom merge function
-    const modelMesh = Mesh.MergeMeshes(
-      elementMeshes, true, false, undefined, false, true,
-    );
+    return this.mergeMeshes('model', elementMeshes);
+  }
 
-    if (!modelMesh) {
-      throw new Error('Unable to merge element meshes into a model mesh');
+  /**
+   * Merges meshes together into a single mesh.
+   * @param name Name of the merged mesh.
+   * @param meshes Meshes to merge.
+   * @returns Merged mesh.
+   */
+  private mergeMeshes(name: string, meshes: Mesh[]): Mesh {
+    const subMeshData: {
+      materialIndex: number,
+      verticesCount: number,
+      indicesCount: number,
+    }[] = [];
+
+    const subMaterials: (Material | null)[] = [];
+    const positions: number[] = [];
+    const indices: number[] = [];
+    const uvs: number[] = [];
+
+    for (const mesh of meshes) {
+      const verticesCount = positions.length / 3;
+
+      const positionData = mesh.getVerticesData(VertexBuffer.PositionKind);
+      if (!positionData) {
+        throw new Error('Unable to get position data for mesh');
+      }
+
+      for (const position of positionData) {
+        positions.push(position);
+      }
+
+      const indicesData = mesh.getIndices();
+      if (!indicesData) {
+        throw new Error('Unable to get indices data for mesh');
+      }
+
+      for (const index of indicesData) {
+        indices.push(index + verticesCount);
+      }
+
+      const uvData = mesh.getVerticesData(VertexBuffer.UVKind);
+      if (!uvData) {
+        throw new Error('Unable to get UV data for mesh');
+      }
+
+      for (const uv of uvData) {
+        uvs.push(uv);
+      }
+
+      let materialIndex = subMaterials.indexOf(mesh.material);
+
+      if (materialIndex < 0) {
+        materialIndex = subMaterials.push(mesh.material) - 1;
+      }
+
+      subMeshData.push({
+        materialIndex,
+        verticesCount: mesh.getTotalVertices(),
+        indicesCount: mesh.getTotalIndices(),
+      });
+
+      mesh.dispose();
     }
 
-    return modelMesh;
+    const mesh = new Mesh(name, this.scene);
+
+    const vertexData = new VertexData();
+    vertexData.positions = positions;
+    vertexData.indices = indices;
+    vertexData.uvs = uvs;
+    vertexData.applyToMesh(mesh);
+
+    let verticesIndex = 0;
+    let indicesIndex = 0;
+
+    for (const subMesh of subMeshData) {
+      new SubMesh(
+        subMesh.materialIndex,
+        verticesIndex,
+        subMesh.verticesCount,
+        indicesIndex,
+        subMesh.indicesCount,
+        mesh,
+      );
+
+      verticesIndex += subMesh.verticesCount;
+      indicesIndex += subMesh.indicesCount;
+    }
+
+    if (subMaterials.length === 1) {
+      [mesh.material] = subMaterials;
+    } else {
+      mesh.material = this.getMultiMaterial(subMaterials);
+    }
+
+    return mesh;
+  }
+
+  /**
+   * Gets a multi-material.
+   * @param subMaterials Materials contained in the multi-material.
+   * @returns The multi-material.
+   */
+  private getMultiMaterial(subMaterials: (Material | null)[]): MultiMaterial {
+    let name = '';
+
+    for (const subMaterial of subMaterials) {
+      if (!subMaterial) {
+        name += '[null]';
+      } else {
+        name += `[${subMaterial.name}]`;
+      }
+    }
+
+    if (name in this.multiMaterials) {
+      return this.multiMaterials[name];
+    }
+
+    const material = new MultiMaterial(name, this.scene);
+    material.subMaterials = subMaterials;
+
+    this.multiMaterials[name] = material;
+    return material;
   }
 
   /**
@@ -436,13 +541,13 @@ export default class BlockStateLoader {
   }
 
   /**
-   * Creates a material or loads a cached material.
+   * Gets a material.
    * @param texture Texture to use for the material.
    * @param tintColor Tint color to use for the material.
    * @param light Light level to use for the material.
-   * @returns The created or loaded material.
+   * @returns The material.
    */
-  private createMaterial(texture: Texture, tintColor?: Color4, light?: number): BlockMaterial {
+  private getMaterial(texture: Texture, tintColor?: Color4, light?: number): Material {
     let materialData = '';
     if (tintColor !== undefined && tintColor !== null) {
       materialData += `tint=${tintColor.toHexString}`;

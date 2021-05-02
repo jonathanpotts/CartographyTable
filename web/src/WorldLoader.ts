@@ -1,4 +1,4 @@
-import { Tags } from '@babylonjs/core';
+import { Tags } from '@babylonjs/core/Misc/tags';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';

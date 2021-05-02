@@ -26,12 +26,11 @@ export default class BlockMaterial extends ShaderMaterial {
       {
         attributes: [
           'position',
-          'normal',
           'uv',
         ],
         uniforms: [
           'worldViewProjection',
-          'textureSampler',
+          'diffuse',
           'tintColor',
           'shadeColor',
         ],
@@ -50,7 +49,7 @@ export default class BlockMaterial extends ShaderMaterial {
    * @returns The modified material.
    */
   public setDiffuseTexture(texture: BaseTexture): BlockMaterial {
-    this.setTexture('textureSampler', texture);
+    this.setTexture('diffuse', texture);
     return this;
   }
 

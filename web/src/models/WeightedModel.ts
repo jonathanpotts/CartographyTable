@@ -1,4 +1,4 @@
-import { Mesh } from '@babylonjs/core';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 
 /**
  * A weighted model.

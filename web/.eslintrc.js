@@ -23,6 +23,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-continue': 'off',
     'no-await-in-loop': 'off',
+    'no-new': 'off',
     'class-methods-use-this': 'off',
     'no-restricted-syntax': [
       'error',
