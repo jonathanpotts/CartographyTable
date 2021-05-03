@@ -6,7 +6,6 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
-import { Tags } from '@babylonjs/core/Misc/tags';
 import { SubMesh } from '@babylonjs/core/Meshes/subMesh';
 import { MultiMaterial } from '@babylonjs/core/Materials/multiMaterial';
 import { Material } from '@babylonjs/core/Materials/material';
@@ -114,7 +113,7 @@ export default class BlockStateLoader {
 
     const { variants } = blockState;
     const tag = tags.find((value) => Object.keys(variants).includes(value));
-    if (tag === undefined || tag === null || !(tag in variants)) {
+    if (tag === undefined || tag === null) {
       throw new Error('The block state does not contain a variant that matches the block data');
     }
 
@@ -433,17 +432,23 @@ export default class BlockStateLoader {
         uvs.push(uv);
       }
 
-      let materialIndex = subMaterials.indexOf(mesh.material);
+      for (const subMesh of mesh.subMeshes) {
+        const subMeshMaterial = (mesh.material instanceof MultiMaterial)
+          ? mesh.material.subMaterials[subMesh.materialIndex]
+          : mesh.material;
 
-      if (materialIndex < 0) {
-        materialIndex = subMaterials.push(mesh.material) - 1;
+        let materialIndex = subMaterials.indexOf(subMeshMaterial);
+
+        if (materialIndex < 0) {
+          materialIndex = subMaterials.push(subMeshMaterial) - 1;
+        }
+
+        subMeshData.push({
+          materialIndex,
+          verticesCount: mesh.getTotalVertices(),
+          indicesCount: mesh.getTotalIndices(),
+        });
       }
-
-      subMeshData.push({
-        materialIndex,
-        verticesCount: mesh.getTotalVertices(),
-        indicesCount: mesh.getTotalIndices(),
-      });
 
       mesh.dispose();
     }
@@ -476,7 +481,13 @@ export default class BlockStateLoader {
     if (subMaterials.length === 1) {
       [mesh.material] = subMaterials;
     } else {
-      mesh.material = this.getMultiMaterial(subMaterials);
+      const multiMaterial = this.getMultiMaterial(subMaterials);
+      mesh.material = multiMaterial;
+
+      for (const subMesh of mesh.subMeshes) {
+        subMesh.materialIndex = multiMaterial.subMaterials
+          .indexOf(subMaterials[subMesh.materialIndex]);
+      }
     }
 
     return mesh;
@@ -488,15 +499,7 @@ export default class BlockStateLoader {
    * @returns The multi-material.
    */
   private getMultiMaterial(subMaterials: (Material | null)[]): MultiMaterial {
-    let name = '';
-
-    for (const subMaterial of subMaterials) {
-      if (!subMaterial) {
-        name += '[null]';
-      } else {
-        name += `[${subMaterial.name}]`;
-      }
-    }
+    const name = subMaterials.sort((a, b) => (a?.name ?? 'null').localeCompare(b?.name ?? 'null')).map((m) => m?.name ?? 'null').join(',');
 
     if (name in this.multiMaterials) {
       return this.multiMaterials[name];
