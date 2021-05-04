@@ -9,12 +9,15 @@ import ServerModel from './models/ServerModel';
 import Helpers from './Helpers';
 import './index.scss';
 
+const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+
 fetch('data/server.json').then(async (response) => {
   if (!response.ok) {
     throw new Error('Unable to retrieve server data');
   }
   const serverData: ServerModel = await response.json();
-  document.title = `${serverData.motd} - BlockMaps`;
+  document.title = `${serverData.motd} - ${document.title}`;
+  canvas.setAttribute('aria-label', `3D map of ${serverData.motd}`);
 });
 
 const loadingScreenDiv = document.getElementById('loading') as HTMLDivElement;
@@ -31,7 +34,6 @@ const loadingScreen: ILoadingScreen = {
   loadingUIText: '',
 };
 
-const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 // const serverLoader = new ServerLoader(canvas);
 // serverLoader.load();
 

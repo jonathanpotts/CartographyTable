@@ -70,7 +70,7 @@ module.exports = (env) => ({
   plugins: [
     new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
-      title: 'BlockMaps',
+      title: 'BlockMaps 3D Minecraft Maps',
       template: 'src/index.html',
     }),
   ],

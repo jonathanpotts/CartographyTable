@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
@@ -7,10 +7,11 @@
   </head>
 
   <body>
-    <canvas id="renderCanvas"></canvas>
-    <div id="loading" class="visible">
-      <div id="loading-spinner"></div>
-      <div id="server-icon"></div>
+    <canvas id="renderCanvas" role="img" aria-label="3D map of the Minecraft server"></canvas>
+    <div id="loading" class="visible" role="status">
+      <div class="visually-hidden">Loading...</div>
+      <div id="loading-spinner" aria-hidden="true"></div>
+      <div id="server-icon" aria-hidden="true"></div>
     </div>
   </body>
 </html>
