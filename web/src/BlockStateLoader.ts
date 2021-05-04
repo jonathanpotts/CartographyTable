@@ -433,7 +433,7 @@ export default class BlockStateLoader {
       }
 
       for (const subMesh of mesh.subMeshes) {
-        const subMeshMaterial = (mesh.material instanceof MultiMaterial)
+        const subMeshMaterial = mesh.material instanceof MultiMaterial
           ? mesh.material.subMaterials[subMesh.materialIndex]
           : mesh.material;
 
