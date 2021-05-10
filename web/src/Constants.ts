@@ -49,6 +49,20 @@ export default class Constants {
    */
   static readonly BIOME_WATER_COLORS: Readonly<Record<string, Color4>> = {
     DEFAULT: new Color4(0.25, 0.46, 0.89, 1),
+    COLD_OCEAN: new Color4(0.24, 0.34, 0.84, 1),
+    DEEP_COLD_OCEAN: new Color4(0.24, 0.34, 0.84, 1),
+    SNOWY_TAIGA: new Color4(0.24, 0.34, 0.84, 1),
+    SNOWY_TAIGA_HILLS: new Color4(0.24, 0.34, 0.84, 1),
+    SNOWY_TAIGA_MOUNTAINS: new Color4(0.24, 0.34, 0.84, 1),
+    FROZEN_OCEAN: new Color4(0.22, 0.22, 0.79, 1),
+    DEEP_FROZEN_OCEAN: new Color4(0.22, 0.22, 0.79, 1),
+    FROZEN_RIVER: new Color4(0.22, 0.22, 0.79, 1),
+    LUKEWARM_OCEAN: new Color4(0.27, 0.68, 0.95, 1),
+    DEEP_LUKEWARM_OCEAN: new Color4(0.27, 0.68, 0.95, 1),
+    SWAMP: new Color4(0.38, 0.48, 0.39, 1),
+    SWAMP_HILLS: new Color4(0.38, 0.48, 0.39, 1),
+    WARM_OCEAN: new Color4(0.26, 0.84, 0.93, 1),
+    DEEP_WARM_OCEAN: new Color4(0.26, 0.84, 0.93, 1),
   };
 
   /**
