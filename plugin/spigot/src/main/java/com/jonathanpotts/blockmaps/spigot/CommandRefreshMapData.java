@@ -186,7 +186,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         worldModel.spawn = new VectorXYZ(world.getSpawnLocation().getBlockX(), world.getSpawnLocation().getBlockY(),
             world.getSpawnLocation().getBlockZ());
 
-        worldModel.minHeight = 0;
+        worldModel.minHeight = world.getMinHeight();
         worldModel.maxHeight = world.getMaxHeight();
 
         if (model.worlds == null) {
@@ -386,7 +386,7 @@ public class CommandRefreshMapData implements CommandExecutor {
         Files.copy(serverIconPath, iconDestination, StandardCopyOption.REPLACE_EXISTING);
       } else {
         Path defaultIconPath = fs.getRootDirectories().iterator().next().resolve("assets").resolve("minecraft")
-          .resolve("textures").resolve("misc").resolve("unknown_server.png");
+            .resolve("textures").resolve("misc").resolve("unknown_server.png");
         Files.copy(defaultIconPath, iconDestination, StandardCopyOption.REPLACE_EXISTING);
       }
     }
@@ -484,10 +484,11 @@ public class CommandRefreshMapData implements CommandExecutor {
           ChunkSnapshot snapshot = chunk.getChunkSnapshot();
           Map<Integer, Map<Integer, Map<Integer, BlockDataModel>>> blocks = null;
 
-          for (int y = 0; y < world.getMaxHeight(); y++) {
+          for (int y = world.getMinHeight(); y < world.getMaxHeight(); y++) {
             for (int x = 0; x < Constants.WIDTH_OF_CHUNK; x++) {
               for (int z = 0; z < Constants.DEPTH_OF_CHUNK; z++) {
-                BlockDataModel blockModel = processBlock(0, world.getMaxHeight(), snapshot, world, x, y, z);
+                BlockDataModel blockModel = processBlock(world.getMinHeight(), world.getMaxHeight(), snapshot, world, x,
+                    y, z);
 
                 if (blockModel == null) {
                   continue;
@@ -530,8 +531,8 @@ public class CommandRefreshMapData implements CommandExecutor {
    * @param z             Z coordinate of the block in the chunk.
    * @return The processes block data.
    */
-  private BlockDataModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x, int y,
-      int z) {
+  private BlockDataModel processBlock(int minHeight, int maxHeight, ChunkSnapshot chunkSnapshot, World world, int x,
+      int y, int z) {
     BlockData blockData = chunkSnapshot.getBlockData(x, y, z);
 
     if (blockData.getMaterial().isAir()) {

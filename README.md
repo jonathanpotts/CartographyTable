@@ -26,7 +26,7 @@ The built JAR file will be in the `plugin/spigot/build/libs` directory.
 
 ## Server Setup
 
-To run the plugin, the server must be using [Spigot](https://www.spigotmc.org/) 1.14.4+. Future versions will require 1.17+ to add support for blocks below Y=0.
+To run the plugin, the server must be using [Spigot](https://www.spigotmc.org/) 1.16.5+ built after 28 Mar 2021.
 
 Put the JAR file in the `plugins` directory of the Spigot server and (re)start the server. Run the `refresh-map-data` command to generate the initial map data.
 
