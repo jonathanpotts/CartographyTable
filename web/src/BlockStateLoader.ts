@@ -381,16 +381,17 @@ export default class BlockStateLoader {
       elementMeshes.push(elementMesh);
     }
 
-    return this.mergeMeshes('model', elementMeshes);
+    return this.mergeMeshes('model', elementMeshes, false);
   }
 
   /**
    * Merges meshes together into a single mesh.
    * @param name Name of the merged mesh.
    * @param meshes Meshes to merge.
+   * @param dispose Dispose old meshes.
    * @returns Merged mesh.
    */
-  private mergeMeshes(name: string, meshes: Mesh[]): Mesh {
+  private mergeMeshes(name: string, meshes: Mesh[], dispose = true): Mesh {
     const subMeshData: {
       materialIndex: number,
       verticesCount: number,
@@ -450,7 +451,9 @@ export default class BlockStateLoader {
         });
       }
 
-      mesh.dispose();
+      if (dispose) {
+        mesh.dispose();
+      }
     }
 
     const mesh = new Mesh(name, this.scene);
@@ -499,7 +502,7 @@ export default class BlockStateLoader {
    * @returns The multi-material.
    */
   private getMultiMaterial(subMaterials: (Material | null)[]): MultiMaterial {
-    const name = subMaterials.sort((a, b) => (a?.name ?? 'null').localeCompare(b?.name ?? 'null')).map((m) => m?.name ?? 'null').join(',');
+    const name = subMaterials.slice(0).sort((a, b) => (a?.name ?? 'null').localeCompare(b?.name ?? 'null')).map((m) => m?.name ?? 'null').join(',');
 
     if (name in this.multiMaterials) {
       return this.multiMaterials[name];
