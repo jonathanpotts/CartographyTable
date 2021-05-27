@@ -150,7 +150,7 @@ public class CommandRefreshMapData implements CommandExecutor {
     URI jarFilePath = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
     Path jarFile = Paths.get(jarFilePath);
 
-    try (FileSystem fs = FileSystems.newFileSystem(jarFile, null)) {
+    try (FileSystem fs = FileSystems.newFileSystem(jarFile, (ClassLoader)null)) {
       Path dataPath = fs.getRootDirectories().iterator().next().resolve("data");
 
       if (!Files.exists(dataPath)) {
@@ -304,7 +304,7 @@ public class CommandRefreshMapData implements CommandExecutor {
 
     Path iconDestination = pluginDataPath.resolve("web").resolve("apple-touch-icon.png");
 
-    try (FileSystem fs = FileSystems.newFileSystem(clientTempFile, null)) {
+    try (FileSystem fs = FileSystems.newFileSystem(clientTempFile, (ClassLoader)null)) {
       Path texturesPath = webDataPath.resolve("textures").resolve("block");
 
       Files.createDirectories(texturesPath);
