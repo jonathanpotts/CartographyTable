@@ -68,4 +68,4 @@ However, you should **NOT** use gzip compression for the following file type:
 | [Mozilla Firefox](https://www.mozilla.org/firefox/browsers/) | Latest [Rapid Release and ESR](https://support.mozilla.org/kb/choosing-firefox-update-channel) |
 | [Opera](https://www.opera.com/) | Latest | Opera Mini not supported |
 
-Browsers on this list are supported on both desktop and mobile unless otherwise noted. Browsers not on this list may work but are not supported. **Microsoft Internet Explorer is not supported. Beta, dev, canary, and nightly releases are not supported.**
+Browsers on this list are supported on both desktop and mobile unless otherwise noted. Browsers not on this list may work but are not supported.
