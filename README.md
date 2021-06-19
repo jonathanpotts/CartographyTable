@@ -12,7 +12,7 @@ A Minecraft server plugin that creates 3D maps of your server that can be viewed
 
 To build from source, the following prerequisite software must be installed:
 
-* [OpenJDK](https://openjdk.java.net/) 16+
+* [OpenJDK](https://openjdk.java.net/) 16 or newer
 * [Node.js](https://nodejs.org/)
 
 ### Steps to build
@@ -26,7 +26,7 @@ The built JAR file will be in the `plugin/spigot/build/libs` directory.
 
 ## Server Setup
 
-To run the plugin, the server must be using [Spigot](https://www.spigotmc.org/) 1.16.5+ built after 28 Mar 2021 and Java 16+.
+To run the plugin, the server must be using [Spigot](https://www.spigotmc.org/) 1.17 or newer.
 
 Put the JAR file in the `plugins` directory of the Spigot server and (re)start the server. Run the `refresh-map-data` command to generate the initial map data.
 
