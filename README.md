@@ -12,7 +12,7 @@ A Minecraft server plugin that creates 3D maps of your server that can be viewed
 
 To build from source, the following prerequisite software must be installed:
 
-* [OpenJDK](https://openjdk.java.net/) 8 or newer
+* [OpenJDK](https://openjdk.java.net/) 8 or newer (e.g. [Microsoft Build of OpenJDK](https://www.microsoft.com/openjdk/))
 * [Node.js](https://nodejs.org/)
 
 ### Steps to build
