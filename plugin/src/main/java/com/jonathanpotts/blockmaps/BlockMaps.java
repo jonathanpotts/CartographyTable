@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.spigot;
+package com.jonathanpotts.blockmaps;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

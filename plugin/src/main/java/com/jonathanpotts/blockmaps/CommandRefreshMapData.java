@@ -1,9 +1,8 @@
-package com.jonathanpotts.blockmaps.spigot;
+package com.jonathanpotts.blockmaps;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import com.jonathanpotts.blockmaps.shared.Constants;
-import com.jonathanpotts.blockmaps.shared.models.*;
+import com.jonathanpotts.blockmaps.models.*;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;

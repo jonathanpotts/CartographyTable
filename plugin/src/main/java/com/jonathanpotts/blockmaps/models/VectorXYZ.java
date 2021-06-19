@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.shared.models;
+package com.jonathanpotts.blockmaps.models;
 
 /**
  * Stores a 3D vector containing a X, Y, and Z coordinate.

@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.shared;
+package com.jonathanpotts.blockmaps;
 
 /**
  * Constants used by BlockMaps.

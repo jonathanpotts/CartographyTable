@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.shared.models;
+package com.jonathanpotts.blockmaps.models;
 
 /**
  * Stores data needed to process a world.

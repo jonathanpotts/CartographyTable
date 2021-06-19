@@ -1,7 +1,7 @@
 name: BlockMaps
 version: 1.0
-main: com.jonathanpotts.blockmaps.spigot.BlockMaps
-api-version: 1.16
+main: com.jonathanpotts.blockmaps.BlockMaps
+api-version: 1.17
 commands:
   refresh-map-data:
     description: Refreshes data used by the map

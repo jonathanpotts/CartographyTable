@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.shared.models;
+package com.jonathanpotts.blockmaps.models;
 
 import java.util.List;
 

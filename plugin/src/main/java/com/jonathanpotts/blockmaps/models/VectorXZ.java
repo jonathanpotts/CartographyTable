@@ -1,4 +1,4 @@
-package com.jonathanpotts.blockmaps.shared.models;
+package com.jonathanpotts.blockmaps.models;
 
 /**
  * Stores a 2D vector containing a X and Z coordinate.
