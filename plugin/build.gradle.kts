@@ -15,11 +15,6 @@ repositories {
   maven { url = uri("https://repository.mulesoft.org/nexus/content/repositories/public/") }
 }
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_16
-  targetCompatibility = JavaVersion.VERSION_16
-}
-
 dependencies {
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.10")
   compileOnly("org.spigotmc:spigot-api:1.17-R0.1-SNAPSHOT")
